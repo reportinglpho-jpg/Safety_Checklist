@@ -34,6 +34,7 @@
     firebase.initializeApp(firebaseConfig);
   }
   const db = firebase.database();
+  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzsf7p75mTPr4rtMsrdLpXxpz6_9OOWnuR_PwxT2_pW_BQJSuvjYNw7yXaCCvMqw1HsrA/exec";
 </script>
   <style>
     body { font-family: 'Sarabun', sans-serif; background-color: #f1f5f9; }
@@ -625,13 +626,32 @@
     }
     
     function refreshData() { 
-      showLoading(true, 'loading');
-      google.script.run.withSuccessHandler((data) => { 
-        globalData = data; renderFormElements(); 
-        if(isAdminAuthenticated) { renderDashboard(); renderAdminDashboard(); } 
-        showLoading(false); 
-      }).getAppData();
+  showLoading(true, 'loading');
+  
+  // ดึงข้อมูลจาก Firebase Realtime Database
+  db.ref('appData').once('value').then((snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      globalData = data;
+      // แปลงโครงสร้าง Array ถ้าไม่มีข้อมูล
+      if (!globalData.inspectorRoles) globalData.inspectorRoles = [];
+      if (!globalData.shops) globalData.shops = [];
+      if (!globalData.checklist) globalData.checklist = [];
+      if (!globalData.users) globalData.users = [];
+      if (!globalData.submissions) globalData.submissions = [];
     }
+    
+    renderFormElements(); 
+    if(isAdminAuthenticated) { 
+      renderDashboard(); 
+      renderAdminDashboard(); 
+    } 
+    showLoading(false); 
+  }).catch((error) => {
+    console.error("Firebase fetch error:", error);
+    showLoading(false);
+  });
+}
 
     function switchTab(tabId) {
       if (isAdminAuthenticated) {
@@ -776,32 +796,47 @@
         document.getElementById('txtDate').valueAsDate = today;
         showToast('toast_upload_bg', 'success');
 
-        google.script.run.withSuccessHandler((res) => {
-          globalData = res.data; 
-        }).submitSafetyForm(payload);
+        // ---> โค้ดใหม่ที่ต้องแทนที่ <---
+        // 1. บันทึกลง Firebase เพื่อให้หน้าเว็บทำงานต่อได้ทันที
+        if (!globalData.submissions) globalData.submissions = [];
+        globalData.submissions.push(payload);
+        db.ref('appData/submissions').set(globalData.submissions);
+
+        // 2. ส่งไปลง Google Sheets (ทำแบบ Background)
+        fetch(GAS_WEB_APP_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'submitForm', data: payload })
+        }).catch(err => console.error("Sync error:", err));
+        
+        // จบส่วนที่แก้ไข
+
       } catch (err) { showToast('Error: ' + err, 'error'); }
-    }
+      } // <-- เพิ่มปีกกาปิดฟังก์ชัน handleFormSubmit ตรงนี้
 
     function processLogin() {
       const u = document.getElementById('adminUser').value;
       const p = document.getElementById('adminPass').value; 
       
-      // เรียกใช้ Pop-up Loading ตรงกลางแบบใหม่ พร้อมเปลี่ยนคำว่ากำลังเข้าสู่ระบบ
       showLoading(true, 'toast_logging_in');
       
-      google.script.run.withSuccessHandler((res) => {
-        showLoading(false); // ซ่อน Pop-up เมื่อทำงานเสร็จ
-        if(res.success) {
-          isAdminAuthenticated = true; currentUserRole = res.role; currentAdminUser = u; currentAdminPass = p; 
+      setTimeout(() => {
+        showLoading(false);
+        const users = globalData.users || [];
+        const user = users.find(x => x.username === u && String(x.password) === String(p));
+        
+        if(user) {
+          isAdminAuthenticated = true; currentUserRole = user.role; currentAdminUser = u; currentAdminPass = p; 
           document.getElementById('loginError').classList.add('hidden');
           const badge = document.getElementById('loggedInUserBadge'); 
-          badge.innerHTML = `👤 ${res.username} <span class="bg-indigo-600/20 text-indigo-900 border border-indigo-200 px-1.5 py-0.5 rounded text-[10px] ml-1 uppercase shadow-inner">${res.role}</span>`; 
+          badge.innerHTML = `👤 ${user.username} <span class="bg-indigo-600/20 text-indigo-900 border border-indigo-200 px-1.5 py-0.5 rounded text-[10px] ml-1 uppercase shadow-inner">${user.role}</span>`; 
           badge.classList.remove('hidden'); document.getElementById('logoutBtn').classList.remove('hidden'); 
           switchTab(targetTabAfterLogin || 'dashboard'); showToast('toast_login_succ', 'success');
         } else { 
-          const errBox = document.getElementById('loginError'); errBox.innerText = res.message; errBox.classList.remove('hidden'); 
+          const errBox = document.getElementById('loginError'); errBox.innerText = "Username หรือ Password ไม่ถูกต้อง"; errBox.classList.remove('hidden'); 
         }
-      }).adminLogin(u, p);
+      }, 400);
     }
     
     function togglePassword() { const pf = document.getElementById('adminPass'); pf.type = pf.type === "password" ? "text" : "password"; }
@@ -848,10 +883,15 @@
       } else if (status === 'unchecked' && existingIndex > -1) { globalData.submissions.splice(existingIndex, 1); }
       renderDashboard(); 
 
-      google.script.run.withSuccessHandler((res) => { 
-        if(!res.success) { showToast(res.message, "error"); refreshData(); } else { showToast('toast_override_succ', 'success'); globalData = res.data; } 
-      }).adminOverrideSubmit(u, p, date, zone, shop, role, status);
-    }
+      db.ref('appData').set(globalData);
+      showToast('toast_override_succ', 'success');
+
+      fetch(GAS_WEB_APP_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'adminOverride', data: { u, p, date, zone, shop, role, status } })
+      }).catch(err => console.error("Sync error:", err));
     
     function printSection(elementId) { document.getElementById(elementId).classList.add('print-target'); window.print(); document.getElementById(elementId).classList.remove('print-target'); }
     function downloadCSV(csv, filename) { const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); }
@@ -1018,20 +1058,26 @@
     function closeEditTextModal() { document.getElementById('editTextModal').classList.add('hidden'); }
     
     function saveEditText() {
-      const type = document.getElementById('editTextType').value;
-      const zone = document.getElementById('editTextZone').value;
-      const oldVal = document.getElementById('editTextOldVal').value; const newVal = document.getElementById('editTextNewVal').value.trim();
-      if(!newVal || newVal === oldVal) { closeEditTextModal(); return; }
-      
-      closeEditTextModal(); showToast('toast_saving_bg', 'info');
-      if (type === 'inspectorRole') { const idx = globalData.inspectorRoles.indexOf(oldVal); if(idx > -1) globalData.inspectorRoles[idx] = newVal; } 
-      else if (type === 'shop') { const shop = globalData.shops.find(s => s.zone === zone && s.name === oldVal); if(shop) shop.name = newVal; } 
-      else if (type === 'checklist') { const chk = globalData.checklist.find(c => c.zone === zone && c.item === oldVal); if(chk) chk.item = newVal; }
-      renderFormElements(); renderDashboard(); renderAdminDashboard();
-      google.script.run.withSuccessHandler((data) => { 
-        showToast('toast_edit_succ', 'success'); globalData = data; renderFormElements(); renderDashboard(); renderAdminDashboard(); 
-      }).editConfigItem(type, zone, oldVal, newVal);
-    }
+  const type = document.getElementById('editTextType').value;
+  const zone = document.getElementById('editTextZone').value;
+  const oldVal = document.getElementById('editTextOldVal').value; 
+  const newVal = document.getElementById('editTextNewVal').value.trim();
+  
+  if(!newVal || newVal === oldVal) { closeEditTextModal(); return; }
+  
+  closeEditTextModal(); 
+  showToast('toast_saving_bg', 'info');
+  
+  if (type === 'inspectorRole') { const idx = globalData.inspectorRoles.indexOf(oldVal); if(idx > -1) globalData.inspectorRoles[idx] = newVal; } 
+  else if (type === 'shop') { const shop = globalData.shops.find(s => s.zone === zone && s.name === oldVal); if(shop) shop.name = newVal; } 
+  else if (type === 'checklist') { const chk = globalData.checklist.find(c => c.zone === zone && c.item === oldVal); if(chk) chk.item = newVal; }
+  
+  renderFormElements(); renderDashboard(); renderAdminDashboard();
+
+  // เซฟลง Firebase
+  db.ref('appData').set(globalData);
+  showToast('toast_edit_succ', 'success');
+}
 
     function renderAdminDashboard() {
       if(!isAdminAuthenticated || currentUserRole !== 'admin') return;
@@ -1095,7 +1141,13 @@
       if(userIdx > -1) globalData.users[userIdx].role = newRole;
       renderAdminDashboard();
 
-      google.script.run.withSuccessHandler((data) => { showToast('toast_edit_user_succ', 'success'); globalData = data; renderAdminDashboard(); }).updateUser(u, newP, newRole);
+      if(newP) {
+        const userObj = globalData.users.find(x => x.username === u);
+        if(userObj) userObj.password = newP;
+      }
+      db.ref('appData').set(globalData);
+      showToast('toast_edit_user_succ', 'success');
+      renderAdminDashboard();
     }
 
     function addShopSpecific(zone, inputId) { 
@@ -1106,8 +1158,9 @@
         globalData.shops.push({zone: zone, name: value}); renderFormElements(); renderDashboard(); renderAdminDashboard();
         showToast('toast_saving_bg', 'info');
         google.script.run.withSuccessHandler((data) => { 
-            globalData = data; showToast('toast_add_shop_succ', 'success'); renderFormElements(); renderDashboard(); renderAdminDashboard();
-        }).addConfigItem('shop', zone, value, '');
+            db.ref('appData').set(globalData);
+        showToast('toast_add_shop_succ', 'success');
+        renderFormElements(); renderDashboard(); renderAdminDashboard();
     }
     function addConfig(type) {
       if (type === 'checklist') { 
@@ -1118,7 +1171,9 @@
           document.getElementById('configChecklistItem').value = '';
           globalData.checklist.push({zone: zone, item: value}); renderFormElements(); renderDashboard(); renderAdminDashboard();
           showToast('toast_saving_bg', 'info');
-          google.script.run.withSuccessHandler((data) => { globalData = data; showToast('toast_add_check_succ', 'success'); renderFormElements(); renderDashboard(); renderAdminDashboard(); }).addConfigItem('checklist', zone, value, '');
+          db.ref('appData').set(globalData);
+          showToast('toast_add_check_succ', 'success');
+          renderFormElements(); renderDashboard(); renderAdminDashboard();
       } 
       else if (type === 'inspectorRole') { 
           const value = document.getElementById('newInspectorRole').value.trim();
@@ -1127,7 +1182,9 @@
           document.getElementById('newInspectorRole').value = '';
           globalData.inspectorRoles.push(value); renderFormElements(); renderDashboard(); renderAdminDashboard();
           showToast('toast_saving_bg', 'info');
-          google.script.run.withSuccessHandler((data) => { globalData = data; showToast('toast_add_role_succ', 'success'); renderFormElements(); renderDashboard(); renderAdminDashboard(); }).addConfigItem('inspectorRole', '', value, '');
+          db.ref('appData').set(globalData);
+          showToast('toast_add_role_succ', 'success');
+          renderFormElements(); renderDashboard(); renderAdminDashboard();
       }
     }
     function addNewUser() { 
@@ -1139,7 +1196,11 @@
         document.getElementById('newAdminPass').value = ''; 
         globalData.users.push({username: u, role: role}); renderAdminDashboard();
         showToast('toast_saving_bg', 'info');
-        google.script.run.withSuccessHandler((data) => { globalData = data; showToast('toast_add_user_succ', 'success'); renderAdminDashboard(); }).addConfigItem('user', u, p, role);
+        if (!globalData.users) globalData.users = [];
+        globalData.users.push({ username: u, password: p, role: role });
+        db.ref('appData').set(globalData);
+        showToast('toast_add_user_succ', 'success');
+        renderAdminDashboard();
     }
     
     let deleteTarget = { type: null, zone: null, value: null };
@@ -1154,22 +1215,20 @@
     }
 
     function executeDelete() {
-        const { type, zone, value } = deleteTarget;
-        closeDeleteModal(); 
+  const { type, zone, value } = deleteTarget;
+  closeDeleteModal(); 
 
-        if (type === 'inspectorRole') globalData.inspectorRoles = globalData.inspectorRoles.filter(r => r !== value);
-        else if (type === 'shop') globalData.shops = globalData.shops.filter(s => !(s.zone === zone && s.name === value));
-        else if (type === 'checklist') globalData.checklist = globalData.checklist.filter(c => !(c.zone === zone && c.item === value));
-        else if (type === 'user') globalData.users = globalData.users.filter(u => u.username !== zone); 
-        
-        renderFormElements(); renderDashboard(); renderAdminDashboard();
-        showToast('toast_del_bg', 'info');
-        google.script.run.withSuccessHandler((res) => { 
-          globalData = res; 
-          showToast('toast_del_succ', 'success'); 
-          renderFormElements(); renderDashboard(); renderAdminDashboard(); 
-        }).deleteConfigItem(type, zone, value);
-    }
+  if (type === 'inspectorRole') globalData.inspectorRoles = globalData.inspectorRoles.filter(r => r !== value);
+  else if (type === 'shop') globalData.shops = globalData.shops.filter(s => !(s.zone === zone && s.name === value));
+  else if (type === 'checklist') globalData.checklist = globalData.checklist.filter(c => !(c.zone === zone && c.item === value));
+  else if (type === 'user') globalData.users = globalData.users.filter(u => u.username !== zone); 
+  
+  renderFormElements(); renderDashboard(); renderAdminDashboard();
+  
+  // เซฟลง Firebase
+  db.ref('appData').set(globalData);
+  showToast('toast_del_succ', 'success');
+}
 
     function onConfigUpdated(data) { globalData = data; renderFormElements(); renderDashboard(); renderAdminDashboard(); showLoading(false); }
   </script>
