@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>Safety Checklist System</title>
+  <!-- ไอคอนสำหรับมือถือ iOS (iPhone/iPad) และ Android -->
+<link rel="apple-touch-icon" sizes="180x180" href="https://github.com/reportinglpho-jpg/Safety_Checklist/blob/main/icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://github.com/reportinglpho-jpg/Safety_Checklist/blob/main/icon.png">
+<link rel="icon" type="image/png" sizes="16x16" href="https://github.com/reportinglpho-jpg/Safety_Checklist/blob/main/icon.png">
+
+<!-- ตั้งชื่อแอปเวลาแสดงบนหน้าจอมือถือ -->
+<meta name="apple-mobile-web-app-title" content="Safety App">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+<script>
+  // เปลี่ยนค่าด้านล่างนี้ให้เป็นของคุณที่ได้จากขั้นตอนที่ 2.2
+  const firebaseConfig = {
+    apiKey: "AIzaSyB5Sgw8t7BHA4OVCTZqB8EbrKNTV0K-0o8",
+    authDomain: "safety-checklist-app-692ce.firebaseapp.com",
+    databaseURL: "https://safety-checklist-app-692ce-default-rtdb.asia-southeast1.firebasedatabase.app/",
+    projectId: "safety-checklist-app-692ce",
+    storageBucket: "safety-checklist-app-692ce.firebasestorage.app",
+    messagingSenderId: "135528898952",
+    appId: "1:135528898952:web:5946c1a32f5be5a4bcda3d"
+  };
+
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  const db = firebase.database();
+</script>
+  <style>
+    body { font-family: 'Sarabun', sans-serif; background-color: #f1f5f9; }
+    .bg-blobs { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; overflow: hidden; }
+    .blob1 { position: absolute; top: -10%; left: -10%; width: 50vw; height: 50vw; border-radius: 50%; background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, rgba(255,255,255,0) 70%); filter: blur(60px); }
+    .blob2 { position: absolute; bottom: -20%; right: -10%; width: 60vw; height: 60vw; border-radius: 50%; background: radial-gradient(circle, rgba(168,85,247,0.15) 0%, rgba(255,255,255,0) 70%); filter: blur(80px); }
+    .blob3 { position: absolute; top: 20%; left: 50%; width: 40vw; height: 40vw; border-radius: 50%; background: radial-gradient(circle, rgba(56,189,248,0.1) 0%, rgba(255,255,255,0) 70%); filter: blur(60px); }
+
+    .tab-active { background-color: #eef2ff !important; color: #4f46e5 !important; font-weight: 700 !important; border: 1px solid #c7d2fe !important; border-radius: 0.75rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+    .hide-scroll-bar { -ms-overflow-style: none; scrollbar-width: none; }
+    .hide-scroll-bar::-webkit-scrollbar { display: none; }
+
+    ::-webkit-scrollbar { height: 8px; width: 8px; }
+    ::-webkit-scrollbar-track { background: #f8fafc; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    
+    @media print { body * { visibility: hidden; } .print-target, .print-target * { visibility: visible; } .print-target { position: absolute; left: 0; top: 0; width: 100%; } .no-print { display: none !important; } .matrix-table { zoom: 0.8; } .overflow-x-auto { overflow: visible !important; } }
+    .dropdown-menu { display: none; }
+    .dropdown-open { display: block; }
+  </style>
+</head>
+<body class="text-slate-800 min-h-screen relative">
+  <div class="bg-blobs"><div class="blob1"></div><div class="blob2"></div><div class="blob3"></div></div>
+
+  <div id="toastContainer" class="fixed top-24 right-5 z-[99999] flex flex-col gap-3 pointer-events-none"></div>
+
+  <div id="loading" class="hidden fixed inset-0 bg-slate-900/40 z-[99999] justify-center items-center backdrop-blur-md transition-opacity">
+    <div class="bg-white/95 backdrop-blur-xl px-10 py-8 rounded-[2rem] shadow-2xl border border-white/50 flex flex-col items-center max-w-[280px] w-full text-center">
+      <div class="relative w-16 h-16 mb-5 flex justify-center items-center">
+        <div class="absolute inset-0 rounded-full border-[5px] border-slate-100"></div>
+        <div class="absolute inset-0 rounded-full border-[5px] border-indigo-600 border-t-transparent animate-spin shadow-lg"></div>
+      </div>
+      <p class="text-slate-800 font-extrabold text-[15px] tracking-wide" id="loadingText">กำลังประมวลผล...</p>
+    </div>
+  </div>
+
+  <div id="editTextModal" class="hidden fixed inset-0 bg-slate-900/40 z-[9999] flex justify-center items-center backdrop-blur-sm transition-opacity"><div class="bg-white/95 backdrop-blur-md p-8 rounded-3xl w-full max-w-sm shadow-2xl border border-white/50"><h3 class="font-bold text-slate-800 mb-6 text-xl flex items-center gap-2">✏️ <span data-i18n="edit_text_title">แก้ไขข้อมูล</span></h3><input type="hidden" id="editTextType"><input type="hidden" id="editTextZone"><input type="hidden" id="editTextOldVal"><div class="space-y-4"><div><label class="block text-xs font-semibold text-slate-600 mb-1.5" data-i18n="edit_text_lbl">ระบุข้อมูลใหม่</label><input type="text" id="editTextNewVal" class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-400 outline-none bg-slate-50"></div></div><div class="flex justify-end space-x-3 mt-8"><button onclick="closeEditTextModal()" class="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-200" data-i18n="btn_cancel">ยกเลิก</button><button onclick="saveEditText()" class="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl text-sm font-semibold hover:shadow-lg" data-i18n="btn_save">บันทึก</button></div></div></div>
+  <div id="editUserModal" class="hidden fixed inset-0 bg-slate-900/40 z-[9999] flex justify-center items-center backdrop-blur-sm transition-opacity"><div class="bg-white/95 backdrop-blur-md p-8 rounded-3xl w-full max-w-sm shadow-2xl border border-white/50"><h3 class="font-bold text-slate-800 mb-6 text-xl flex items-center gap-2">✏️ <span data-i18n="edit_user_title">แก้ไขบัญชี</span> <span id="editModalUsername" class="text-indigo-600"></span></h3><input type="hidden" id="editModalUserValue"><div class="space-y-4"><div><label class="block text-xs font-semibold text-slate-600 mb-1.5" data-i18n="edit_pass_lbl">รหัสผ่านใหม่</label><input type="text" id="editModalPass" class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-400 outline-none bg-slate-50" data-i18n-ph="ph_pass"></div><div><label class="block text-xs font-semibold text-slate-600 mb-1.5" data-i18n="edit_role_lbl">สิทธิ์การใช้งาน</label><select id="editModalRole" class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-400 outline-none bg-slate-50"><option value="user" data-i18n="role_user">User</option><option value="admin" data-i18n="role_admin">Admin</option></select></div></div><div class="flex justify-end space-x-3 mt-8"><button onclick="closeEditModal()" class="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-200" data-i18n="btn_cancel">ยกเลิก</button><button onclick="saveEditUser()" class="px-5 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 text-white rounded-xl text-sm font-semibold hover:shadow-lg shadow-amber-500/30" data-i18n="btn_save">บันทึก</button></div></div></div>
+  <div id="overrideModal" class="hidden fixed inset-0 bg-slate-900/60 z-[9999] flex justify-center items-center backdrop-blur-sm transition-opacity"><div class="bg-white/95 backdrop-blur-md p-8 rounded-3xl w-full max-w-sm shadow-2xl border border-white/50 relative overflow-hidden"><div class="absolute top-0 left-0 w-full h-1.5 bg-indigo-500"></div><h3 class="font-bold text-slate-800 mb-2 text-xl flex items-center gap-2">📝 <span data-i18n="override_title">ยืนยันการแก้ไขผลตรวจ</span></h3><p class="text-xs text-slate-500 mb-5"><span data-i18n="override_desc">แก้ไขผลการตรวจย้อนหลังสำหรับวันที่</span> <span id="overrideDateDisplay" class="font-bold text-indigo-600"></span></p><input type="hidden" id="overrideDate"><input type="hidden" id="overrideZone"><input type="hidden" id="overrideShop"><input type="hidden" id="overrideRole"><div class="space-y-4"><div><label class="block text-xs font-semibold text-slate-600 mb-1.5" data-i18n="override_lbl_status">สถานะที่ต้องการแก้ไข</label><select id="overrideStatus" class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-400 outline-none bg-slate-50 font-bold"><option value="checked" data-i18n="override_opt_checked">✅ ตรวจแล้ว (เพิ่มผลการตรวจ)</option><option value="unchecked" data-i18n="override_opt_unchecked">❌ ยังไม่ได้ตรวจ (ลบผลการตรวจ)</option></select></div></div><div class="flex justify-end space-x-3 mt-8"><button onclick="closeOverrideModal()" class="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-200" data-i18n="btn_cancel">ยกเลิก</button><button onclick="submitOverride()" class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-bold hover:shadow-lg" data-i18n="btn_confirm">ยืนยัน</button></div></div></div>
+
+  <div id="confirmDeleteModal" class="hidden fixed inset-0 bg-slate-900/40 z-[9999] flex justify-center items-center backdrop-blur-sm transition-opacity">
+    <div class="bg-white/95 backdrop-blur-md p-8 rounded-3xl w-full max-w-sm shadow-2xl border border-white/50">
+      <h3 class="font-bold text-red-600 mb-3 text-xl flex items-center gap-2">⚠️ <span data-i18n="del_title">ยืนยันการลบ</span></h3>
+      <p class="text-sm text-slate-600 mb-6 leading-relaxed"><span data-i18n="del_desc">คุณแน่ใจหรือไม่ที่จะลบข้อมูลรายการนี้ออกจากระบบ?</span><br><span class="text-xs text-red-500 font-bold" data-i18n="del_warn">*การกระทำนี้ไม่สามารถย้อนกลับได้</span></p>
+      <div class="flex justify-end space-x-3 mt-4">
+        <button onclick="closeDeleteModal()" class="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-200" data-i18n="btn_cancel">ยกเลิก</button>
+        <button onclick="executeDelete()" class="px-5 py-2.5 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 shadow-lg shadow-red-500/30" data-i18n="btn_del_confirm">ยืนยันลบ</button>
+      </div>
+    </div>
+  </div>
+
+  <header class="bg-gradient-to-r from-blue-800 via-indigo-700 to-purple-800 shadow-lg sticky top-0 z-50 no-print">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center space-x-4">
+        <div class="p-2.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white shadow-inner"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg></div>
+        <div><h1 class="text-xl font-extrabold text-white tracking-wide drop-shadow-md">Safety Checklist</h1><p class="text-[11px] text-indigo-200 font-medium tracking-wide mt-0.5" data-i18n="sys_subtitle">ระบบแบบตรวจสอบความปลอดภัยร้านค้า</p></div>
+      </div>
+      <div class="flex items-center space-x-3">
+        <div class="relative">
+          <button onclick="toggleLangMenu()" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 shadow-sm px-3.5 py-1.5 rounded-full text-xs font-bold text-white transition backdrop-blur-md"><svg class="w-4 h-4 text-indigo-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span id="currentLangIcon" class="text-sm">🇹🇭</span><span id="currentLangText" class="tracking-wider">TH</span></button>
+          <div id="langMenu" class="dropdown-menu absolute right-0 mt-2 w-36 bg-white rounded-xl shadow-2xl border border-slate-100 py-1 z-50 overflow-hidden text-slate-700">
+            <button onclick="setLang('th', '🇹🇭', 'TH')" class="w-full text-left px-4 py-2.5 text-sm font-medium hover:bg-indigo-50 hover:text-indigo-700 transition flex items-center gap-3">🇹🇭 ไทย</button>
+            <button onclick="setLang('en', '🇬🇧', 'Eng')" class="w-full text-left px-4 py-2.5 text-sm font-medium hover:bg-indigo-50 hover:text-indigo-700 transition flex items-center gap-3">🇬🇧 English</button>
+            <button onclick="setLang('mm', '🇲🇲', 'MM')" class="w-full text-left px-4 py-2.5 text-sm font-medium hover:bg-indigo-50 hover:text-indigo-700 transition flex items-center gap-3">🇲🇲 Myanmar</button>
+            <button onclick="setLang('la', '🇱🇦', 'LA')" class="w-full text-left px-4 py-2.5 text-sm font-medium hover:bg-indigo-50 hover:text-indigo-700 transition flex items-center gap-3">🇱🇦 Lao</button>
+            <button onclick="setLang('kh', '🇰🇭', 'KH')" class="w-full text-left px-4 py-2.5 text-sm font-medium hover:bg-indigo-50 hover:text-indigo-700 transition flex items-center gap-3">🇰🇭 Khmer</button>
+            <button onclick="setLang('id', '🇮🇩', 'ID')" class="w-full text-left px-4 py-2.5 text-sm font-medium hover:bg-indigo-50 hover:text-indigo-700 transition flex items-center gap-3">🇮🇩 Indonesia</button>
+          </div>
+        </div>
+        <span id="loggedInUserBadge" class="hidden text-xs bg-white text-indigo-800 px-4 py-1.5 rounded-full font-bold shadow-sm"></span>
+        <button id="logoutBtn" onclick="logoutAdmin()" class="hidden text-xs bg-red-500 text-white border border-red-400 px-4 py-1.5 rounded-full font-bold hover:bg-red-600 shadow-md transition" data-i18n="btn_logout">ออกจากระบบ</button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="bg-white/90 backdrop-blur-xl border-b border-slate-200 shadow-sm no-print sticky top-[60px] z-40">
+    <div class="max-w-7xl mx-auto flex overflow-x-auto hide-scroll-bar px-4 py-3 items-center justify-start md:justify-between gap-4">
+      <div class="flex items-center gap-2 flex-nowrap">
+        <button onclick="switchTab('zone1')" id="tab-zone1" class="px-4 py-2 text-sm font-bold text-slate-500 rounded-xl hover:bg-slate-100 hover:text-indigo-600 transition whitespace-nowrap tab-active border border-transparent" data-i18n="zone1">Zone Public Lane</button>
+        <button onclick="switchTab('zone2')" id="tab-zone2" class="px-4 py-2 text-sm font-bold text-slate-500 rounded-xl hover:bg-slate-100 hover:text-indigo-600 transition whitespace-nowrap border border-transparent" data-i18n="zone2">Zone Public Market</button>
+        <button onclick="switchTab('zone3')" id="tab-zone3" class="px-4 py-2 text-sm font-bold text-slate-500 rounded-xl hover:bg-slate-100 hover:text-indigo-600 transition whitespace-nowrap border border-transparent" data-i18n="zone3">Zone Lofter</button>
+        <button onclick="switchTab('zone4')" id="tab-zone4" class="px-4 py-2 text-sm font-bold text-slate-500 rounded-xl hover:bg-slate-100 hover:text-indigo-600 transition whitespace-nowrap border border-transparent" data-i18n="zone4">% ARABICA/Starbucks/Greyhound</button>
+        <button onclick="switchTab('zone5')" id="tab-zone5" class="px-4 py-2 text-sm font-bold text-slate-500 rounded-xl hover:bg-slate-100 hover:text-indigo-600 transition whitespace-nowrap border border-transparent" data-i18n="zone5">ห้องอาหารพนักงาน</button>
+      </div>
+      <div class="flex items-center gap-2 flex-nowrap pl-4 border-l-2 border-slate-200/60">
+        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="px-4 py-2 text-sm font-bold text-slate-500 rounded-xl hover:bg-slate-100 hover:text-indigo-600 transition whitespace-nowrap flex items-center gap-2 border border-transparent"><span class="text-lg">📊</span> <span data-i18n="tab_dashboard">แดชบอร์ด</span></button>
+        <button onclick="switchTab('admin')" id="tab-admin" class="px-4 py-2 text-sm font-bold text-slate-500 rounded-xl hover:bg-slate-100 hover:text-indigo-600 transition whitespace-nowrap flex items-center gap-2 border border-transparent"><span class="text-lg">⚙️</span> <span data-i18n="tab_admin">ตั้งค่าระบบ</span></button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto px-4 py-8 relative z-10">
+    <section id="formSection" class="bg-white/90 backdrop-blur-lg rounded-[2rem] shadow-2xl shadow-indigo-100/40 border border-white p-6 md:p-10 no-print max-w-4xl mx-auto">
+      <div class="flex items-center gap-3 mb-8 pb-4 border-b border-slate-200/50">
+        <div class="w-1.5 h-8 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full shadow-sm"></div><h2 id="currentZoneTitle" class="text-2xl font-extrabold text-slate-800 tracking-tight">Zone Public Lane ชั้น 1</h2>
+      </div>
+      <form id="safetyForm" onsubmit="handleFormSubmit(event)" class="space-y-8">
+        <input type="hidden" id="txtZone" value="Zone Public Lane ชั้น 1">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 p-6 rounded-3xl border border-white shadow-inner">
+          <div><label class="block text-sm font-bold text-slate-700 mb-2" data-i18n="lbl_date">1. วันที่ตรวจสอบ</label><input type="date" id="txtDate" required class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-white focus:ring-2 focus:ring-indigo-400 outline-none transition shadow-sm font-medium"></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-2" data-i18n="lbl_auditor">2. ชื่อ-นามสกุล ผู้ตรวจสอบ</label><input type="text" id="txtAuditor" required class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-white focus:ring-2 focus:ring-indigo-400 outline-none transition shadow-sm font-medium i18n-ph-auditor"></div>
+          <div class="md:col-span-2"><label class="block text-sm font-bold text-slate-700 mb-2"><span data-i18n="lbl_role">3. ประเภทผู้ตรวจสอบ</span> <span class="text-xs font-normal text-indigo-500">(Role)</span></label><select id="ddlInspectorRole" required class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-white focus:ring-2 focus:ring-indigo-400 outline-none transition shadow-sm cursor-pointer font-bold text-indigo-900"></select></div>
+          <div class="md:col-span-2"><label class="block text-sm font-bold text-slate-700 mb-2" data-i18n="lbl_shop">4. ระบุชื่อร้านค้า</label><select id="ddlShop" required class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-white focus:ring-2 focus:ring-indigo-400 outline-none transition shadow-sm cursor-pointer font-bold text-slate-800"></select></div>
+        </div>
+        <div><label class="block text-sm font-bold text-slate-700 mb-4 px-1" data-i18n="lbl_details">5. รายละเอียดการตรวจสอบความปลอดภัย</label><div id="checklistContainer" class="space-y-4"></div></div>
+        <div class="bg-gradient-to-r from-indigo-50/50 to-blue-50/50 p-6 rounded-3xl border border-indigo-100/50">
+          <label class="block text-sm font-bold text-slate-700 mb-4"><span data-i18n="lbl_attach">6. แนบรูปภาพยืนยันการตรวจสอบ</span> <span class="text-xs text-slate-400 font-normal bg-white px-2 py-1 rounded-md ml-2 border border-slate-200 shadow-sm" data-i18n="lbl_optional">(ไม่บังคับ)</span></label>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div class="border-2 border-dashed border-indigo-300 rounded-2xl p-4 text-center bg-white/90 hover:border-indigo-500 transition relative h-40 flex flex-col justify-center items-center group shadow-sm">
+              <span class="text-sm font-bold text-indigo-900 block mb-3 group-hover:text-indigo-600 transition" data-i18n="img_gas">📸 รูปภาพวาล์วแก๊ส</span>
+              <div id="box_fileGas" class="w-full">
+                <input type="file" id="fileGas" accept="image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer" onchange="previewImage(this, 'preview_fileGas', 'box_fileGas', 'txt_fileGas')">
+              </div>
+              <div id="preview_fileGas" class="hidden absolute inset-0 bg-white rounded-2xl p-4 shadow-inner flex-col justify-center items-center">
+                <span class="text-4xl mb-2">📁</span>
+                <span id="txt_fileGas" class="text-[11px] font-bold text-emerald-600 text-center w-full px-2 break-words line-clamp-2"></span>
+                <span class="text-[10px] text-slate-500 mt-1" data-i18n="file_selected">เลือกไฟล์แล้ว</span>
+                <button type="button" onclick="removeImage('fileGas', 'preview_fileGas', 'box_fileGas', 'txt_fileGas')" class="absolute -top-3 -right-3 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex justify-center items-center shadow-lg font-bold transition transform hover:scale-110">✕</button>
+              </div>
+            </div>
+            <div class="border-2 border-dashed border-indigo-300 rounded-2xl p-4 text-center bg-white/90 hover:border-indigo-500 transition relative h-40 flex flex-col justify-center items-center group shadow-sm">
+              <span class="text-sm font-bold text-indigo-900 block mb-3 group-hover:text-indigo-600 transition" data-i18n="img_water">📸 รูปภาพวาล์วน้ำ</span>
+              <div id="box_fileWater" class="w-full">
+                <input type="file" id="fileWater" accept="image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer" onchange="previewImage(this, 'preview_fileWater', 'box_fileWater', 'txt_fileWater')">
+              </div>
+              <div id="preview_fileWater" class="hidden absolute inset-0 bg-white rounded-2xl p-4 shadow-inner flex-col justify-center items-center">
+                <span class="text-4xl mb-2">📁</span>
+                <span id="txt_fileWater" class="text-[11px] font-bold text-emerald-600 text-center w-full px-2 break-words line-clamp-2"></span>
+                <span class="text-[10px] text-slate-500 mt-1" data-i18n="file_selected">เลือกไฟล์แล้ว</span>
+                <button type="button" onclick="removeImage('fileWater', 'preview_fileWater', 'box_fileWater', 'txt_fileWater')" class="absolute -top-3 -right-3 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex justify-center items-center shadow-lg font-bold transition transform hover:scale-110">✕</button>
+              </div>
+            </div>
+            <div class="border-2 border-dashed border-indigo-300 rounded-2xl p-4 text-center bg-white/90 hover:border-indigo-500 transition relative h-40 flex flex-col justify-center items-center group shadow-sm">
+              <span class="text-sm font-bold text-indigo-900 block mb-3 group-hover:text-indigo-600 transition" data-i18n="img_overall">📸 รูปภาพรวมของร้าน</span>
+              <div id="box_fileOverall" class="w-full">
+                <input type="file" id="fileOverall" accept="image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer" onchange="previewImage(this, 'preview_fileOverall', 'box_fileOverall', 'txt_fileOverall')">
+              </div>
+              <div id="preview_fileOverall" class="hidden absolute inset-0 bg-white rounded-2xl p-4 shadow-inner flex-col justify-center items-center">
+                <span class="text-4xl mb-2">📁</span>
+                <span id="txt_fileOverall" class="text-[11px] font-bold text-emerald-600 text-center w-full px-2 break-words line-clamp-2"></span>
+                <span class="text-[10px] text-slate-500 mt-1" data-i18n="file_selected">เลือกไฟล์แล้ว</span>
+                <button type="button" onclick="removeImage('fileOverall', 'preview_fileOverall', 'box_fileOverall', 'txt_fileOverall')" class="absolute -top-3 -right-3 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex justify-center items-center shadow-lg font-bold transition transform hover:scale-110">✕</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="pt-6"><button type="submit" class="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white rounded-2xl py-4 font-bold text-lg hover:shadow-indigo-500/50 transition-all shadow-xl shadow-indigo-600/30 transform hover:-translate-y-0.5" data-i18n="btn_submit">ส่งแบบฟอร์มบันทึกข้อมูล</button></div>
+      </form>
+    </section>
+
+    <section id="adminLoginSection" class="hidden max-w-md mx-auto bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl shadow-indigo-200/50 border border-white p-8 mt-12 no-print relative overflow-hidden">
+      <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
+      <h2 class="text-2xl font-extrabold text-center text-slate-800 mb-8 mt-2 leading-tight"><span data-i18n="lbl_login">ลงชื่อเข้าใช้งาน</span><br><span class="text-sm text-slate-500 font-medium">(Dashboard & Admin)</span></h2>
+      <div id="loginError" class="hidden mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm rounded-r-lg font-bold shadow-sm"></div>
+      <div class="space-y-5">
+        <div><label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">Username</label><input type="text" id="adminUser" class="w-full border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-400 bg-slate-50 focus:bg-white transition font-medium" data-i18n-ph="ph_user"></div>
+        <div><label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">Password</label><div class="relative"><input type="password" id="adminPass" class="w-full border border-slate-200 rounded-xl px-4 py-3 pr-12 outline-none focus:ring-2 focus:ring-indigo-400 bg-slate-50 focus:bg-white transition font-medium" data-i18n-ph="ph_pass"><button type="button" onclick="togglePassword()" class="absolute right-4 top-3.5 text-slate-400 hover:text-indigo-600">👁️</button></div></div>
+        <button onclick="processLogin()" class="w-full bg-slate-800 text-white rounded-xl py-3.5 font-bold text-sm hover:bg-slate-900 transition-all shadow-lg mt-4" data-i18n="btn_login">เข้าสู่ระบบ</button>
+      </div>
+    </section>
+
+    <section id="dashboardSection" class="hidden space-y-6">
+      <div class="bg-white/90 backdrop-blur-lg rounded-[2rem] shadow-2xl shadow-indigo-100/30 border border-white p-6 md:p-8">
+        <div class="flex flex-col md:flex-row justify-between md:items-center mb-8 gap-4 border-b border-slate-200/50 pb-5">
+          <div class="flex items-center gap-4"><div class="p-3 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl text-indigo-700 shadow-inner"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg></div><div><h3 class="text-2xl font-extrabold text-slate-800" data-i18n="dashboard_title">แดชบอร์ดสรุปผล</h3><p class="text-sm text-slate-500 font-medium" data-i18n="dashboard_desc">คลิก ✕ หรือ ✓ ในตาราง เพื่อยืนยันการแก้ไขผล</p></div></div>
+          
+          <div class="flex flex-wrap items-center gap-3 no-print">
+            <button onclick="refreshData()" class="flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-2xl text-sm font-bold border border-indigo-200 transition shadow-sm" title="รีเฟรชข้อมูล">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+              <span data-i18n="btn_refresh">รีเฟรชข้อมูล</span>
+            </button>
+            <div class="bg-white p-2.5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-2">
+              <label class="text-sm font-bold text-slate-600 pl-2" data-i18n="dashboard_month">📅 เดือน:</label>
+              <input type="month" id="filterMonth" onchange="renderDashboard()" class="border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-400 font-bold bg-slate-50">
+            </div>
+          </div>
+
+        </div>
+        <div id="dashboardTablesContainer" class="space-y-12"></div>
+      </div>
+    </section>
+
+    <section id="adminSettingsSection" class="hidden space-y-8 no-print">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="bg-white/80 backdrop-blur-lg rounded-[2rem] shadow-xl shadow-slate-200/50 border border-white p-8 lg:col-span-1">
+          <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-200/50"><div class="p-2 bg-indigo-100 rounded-xl"><span class="text-xl">🏷️</span></div><h3 class="text-lg font-bold text-slate-800" data-i18n="admin_roles">ประเภทผู้ตรวจสอบ</h3></div>
+          <div class="flex space-x-2 mb-6"><input type="text" id="newInspectorRole" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-300 bg-slate-50 focus:bg-white" data-i18n-ph="ph_role"><button onclick="addConfig('inspectorRole')" class="bg-slate-800 text-white text-sm font-bold rounded-xl px-4 hover:bg-slate-900 shadow-sm" data-i18n="btn_add">เพิ่ม</button></div>
+          <div class="space-y-2 max-h-64 overflow-y-auto pr-2" id="listInspectorRoles"></div>
+        </div>
+        <div class="bg-white/80 backdrop-blur-lg rounded-[2rem] shadow-xl shadow-slate-200/50 border border-white p-8 lg:col-span-2">
+          <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-200/50"><div class="p-2 bg-indigo-100 rounded-xl"><span class="text-xl">👥</span></div><h3 class="text-lg font-bold text-slate-800" data-i18n="admin_users">จัดการบัญชีผู้ใช้งาน (Users & Roles)</h3></div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm mb-6"><span class="block text-sm font-bold text-slate-800 mb-3 flex items-center gap-2"><span class="bg-indigo-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] shadow">+</span> <span data-i18n="add_user">เพิ่มบัญชีใหม่</span></span><div class="grid grid-cols-1 md:grid-cols-4 gap-3"><input type="text" id="newAdminUser" class="border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-400 bg-slate-50" data-i18n-ph="ph_user"><input type="text" id="newAdminPass" class="border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-400 bg-slate-50" data-i18n-ph="ph_pass"><select id="newAdminRole" class="border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-400 bg-slate-50 font-bold"><option value="user" data-i18n="role_user">สิทธิ์: User</option><option value="admin" data-i18n="role_admin">สิทธิ์: Admin</option></select><button onclick="addNewUser()" class="bg-slate-800 text-white px-4 py-2 rounded-xl hover:bg-slate-900 font-bold text-sm shadow-md transition" data-i18n="btn_save">บันทึก</button></div></div>
+          <div class="overflow-x-auto border border-slate-200 rounded-2xl shadow-sm"><table class="w-full text-left text-sm bg-white"><thead class="bg-slate-50 text-slate-600 border-b border-slate-200"><tr><th class="p-3 font-bold" data-i18n="ph_user">Username</th><th class="p-3 font-bold" data-i18n="ph_pass">Password</th><th class="p-3 font-bold">Role</th><th class="p-3 font-bold text-center w-24" data-i18n="col_manage">จัดการ</th></tr></thead><tbody id="tblUserRows" class="divide-y divide-slate-100"></tbody></table></div>
+        </div>
+      </div>
+      <div class="bg-white/80 backdrop-blur-lg rounded-[2rem] shadow-xl shadow-slate-200/50 border border-white p-8">
+        <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-200/50"><div class="p-2 bg-emerald-100 rounded-xl"><span class="text-xl">🏪</span></div><h3 class="text-lg font-bold text-slate-800" data-i18n="admin_shops">ตั้งค่ารายชื่อร้านค้า (แยกตาม Zone)</h3></div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 hover:shadow-md transition"><span class="inline-block bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full mb-4" data-i18n="zone1">Zone Public Lane</span><div class="flex space-x-2 mb-5"><input type="text" id="shopName_zone1" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-300 bg-slate-50 focus:bg-white" data-i18n-ph="ph_shop"><button onclick="addShopSpecific('Zone Public Lane ชั้น 1', 'shopName_zone1')" class="bg-slate-800 text-white text-sm font-bold rounded-xl px-4 hover:bg-slate-900 shadow-sm" data-i18n="btn_add">เพิ่ม</button></div><div class="space-y-2 max-h-56 overflow-y-auto pr-2" id="listShop_zone1"></div></div>
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 hover:shadow-md transition"><span class="inline-block bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full mb-4" data-i18n="zone2">Zone Public Market</span><div class="flex space-x-2 mb-5"><input type="text" id="shopName_zone2" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-300 bg-slate-50 focus:bg-white" data-i18n-ph="ph_shop"><button onclick="addShopSpecific('Zone Public Market ชั้น 1', 'shopName_zone2')" class="bg-slate-800 text-white text-sm font-bold rounded-xl px-4 hover:bg-slate-900 shadow-sm" data-i18n="btn_add">เพิ่ม</button></div><div class="space-y-2 max-h-56 overflow-y-auto pr-2" id="listShop_zone2"></div></div>
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 hover:shadow-md transition"><span class="inline-block bg-purple-100 text-purple-800 text-xs font-bold px-3 py-1 rounded-full mb-4" data-i18n="zone3">Zone Lofter</span><div class="flex space-x-2 mb-5"><input type="text" id="shopName_zone3" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-300 bg-slate-50 focus:bg-white" data-i18n-ph="ph_shop"><button onclick="addShopSpecific('Zone Lofter ชั้น 6', 'shopName_zone3')" class="bg-slate-800 text-white text-sm font-bold rounded-xl px-4 hover:bg-slate-900 shadow-sm" data-i18n="btn_add">เพิ่ม</button></div><div class="space-y-2 max-h-56 overflow-y-auto pr-2" id="listShop_zone3"></div></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 hover:shadow-md transition"><span class="inline-block bg-orange-100 text-orange-800 text-xs font-bold px-3 py-1 rounded-full mb-4" data-i18n="zone4">% ARABICA / Starbucks / Greyhound Café</span><div class="flex space-x-2 mb-5"><input type="text" id="shopName_zone4" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-orange-300 bg-slate-50 focus:bg-white" data-i18n-ph="ph_shop"><button onclick="addShopSpecific('% ARABICA / Starbucks / Greyhound Café', 'shopName_zone4')" class="bg-slate-800 text-white text-sm font-bold rounded-xl px-4 hover:bg-slate-900 shadow-sm" data-i18n="btn_add">เพิ่ม</button></div><div class="space-y-2 max-h-56 overflow-y-auto pr-2" id="listShop_zone4"></div></div>
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 hover:shadow-md transition"><span class="inline-block bg-rose-100 text-rose-800 text-xs font-bold px-3 py-1 rounded-full mb-4" data-i18n="zone5">ห้องอาหารพนักงาน</span><div class="flex space-x-2 mb-5"><input type="text" id="shopName_zone5" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-rose-300 bg-slate-50 focus:bg-white" data-i18n-ph="ph_shop"><button onclick="addShopSpecific('ห้องอาหารพนักงาน', 'shopName_zone5')" class="bg-slate-800 text-white text-sm font-bold rounded-xl px-4 hover:bg-slate-900 shadow-sm" data-i18n="btn_add">เพิ่ม</button></div><div class="space-y-2 max-h-56 overflow-y-auto pr-2" id="listShop_zone5"></div></div>
+        </div>
+      </div>
+      
+      <div class="bg-white/80 backdrop-blur-lg rounded-[2rem] shadow-xl shadow-slate-200/50 border border-white p-8">
+        <div class="flex items-center gap-3 mb-2"><div class="p-2 bg-amber-100 rounded-xl"><span class="text-xl">📋</span></div><h3 class="text-lg font-bold text-slate-800" data-i18n="admin_checks">ตั้งค่ารายละเอียดการตรวจสอบ</h3></div><p class="text-sm text-slate-500 mb-6 ml-12" data-i18n="admin_checks_desc">*ระบบจะรันหมายเลขข้อให้อัตโนมัติ</p>
+        <div class="flex flex-col md:flex-row gap-4 mb-8 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <select id="configChecklistZone" class="border border-slate-200 rounded-xl px-4 py-2.5 text-sm bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-400 font-bold cursor-pointer">
+            <option value="Zone Public Lane ชั้น 1" data-i18n="zone1_full">Zone Public Lane ชั้น 1</option>
+            <option value="Zone Public Market ชั้น 1" data-i18n="zone2_full">Zone Public Market ชั้น 1</option>
+            <option value="Zone Lofter ชั้น 6" data-i18n="zone3_full">Zone Lofter ชั้น 6</option>
+            <option value="% ARABICA / Starbucks / Greyhound Café" data-i18n="zone4_full">% ARABICA / Starbucks / Greyhound Café</option>
+            <option value="ห้องอาหารพนักงาน" data-i18n="zone5_full">ห้องอาหารพนักงาน</option>
+          </select>
+          <input type="text" id="configChecklistItem" class="flex-1 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-400 bg-slate-50 focus:bg-white" data-i18n-ph="ph_check">
+          <button onclick="addConfig('checklist')" class="bg-slate-800 text-white text-sm rounded-xl px-8 py-2.5 font-bold hover:bg-slate-900 shadow-md transition flex items-center gap-2"><span>➕</span> <span data-i18n="btn_add">เพิ่ม</span></button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="checklistListContainer"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const i18n = {
+      th: {
+        sys_subtitle: "ระบบแบบตรวจสอบความปลอดภัยร้านค้า", tab_dashboard: "แดชบอร์ด", tab_admin: "ตั้งค่าระบบ",
+        lbl_date: "1. วันที่ตรวจสอบ", lbl_auditor: "2. ชื่อ-นามสกุล ผู้ตรวจสอบ", lbl_role: "3. ประเภทผู้ตรวจสอบ", lbl_shop: "4. ระบุชื่อร้านค้า", lbl_details: "5. รายละเอียดการตรวจสอบความปลอดภัย",
+        lbl_attach: "6. แนบรูปภาพยืนยันการตรวจสอบ", lbl_optional: "(ไม่บังคับ)",
+        img_gas: "📸 รูปภาพวาล์วแก๊ส", img_water: "📸 รูปภาพวาล์วน้ำ", img_overall: "📸 รูปภาพรวมของร้าน",
+        btn_submit: "ส่งแบบฟอร์มบันทึกข้อมูล", lbl_login: "ลงชื่อเข้าใช้งาน", btn_login: "เข้าสู่ระบบ", btn_logout: "ออกจากระบบ",
+        loading: "กำลังประมวลผล...", select_shop: "--- เลือกร้านค้า ---", select_role: "--- เลือกประเภทผู้ตรวจสอบ ---",
+        no_checklist: "ไม่มีข้อมูลหัวข้อการตรวจความปลอดภัยในระบบ", rad_pass: "เรียบร้อย", rad_fail: "ไม่เรียบร้อย", rad_na: "ไม่มี", reason_ph: "ระบุสาเหตุ...", reason_lbl: "หมายเหตุ (ระบุสาเหตุ):",
+        dashboard_title: "แดชบอร์ดสรุปผล", dashboard_desc: "คลิก ✕ หรือ ✓ ในตาราง เพื่อแก้ไขผลย้อนหลัง", dashboard_month: "📅 เดือน:",
+        item_water: "ตรวจสอบวาล์วน้ำ", item_gas: "ตรวจสอบวาล์วแก๊ส", item_light: "ตรวจสอบไฟส่องสว่าง", item_overall: "ตรวจสอบภาพรวมบริเวณพื้นที่",
+        override_title: "ยืนยันการแก้ไขผลตรวจ", override_desc: "แก้ไขผลการตรวจย้อนหลังสำหรับวันที่", override_lbl_status: "สถานะที่ต้องการแก้ไข", override_opt_checked: "✅ ตรวจแล้ว", override_opt_unchecked: "❌ ยังไม่ได้ตรวจ",
+        edit_text_title: "แก้ไขข้อมูล", edit_text_lbl: "ระบุข้อมูลใหม่", edit_user_title: "แก้ไขบัญชี", edit_pass_lbl: "รหัสผ่านใหม่ (เว้นว่างถ้าไม่เปลี่ยน)", edit_role_lbl: "สิทธิ์การใช้งาน (Role)",
+        admin_roles: "ประเภทผู้ตรวจสอบ", admin_users: "จัดการบัญชีผู้ใช้งาน (Users & Roles)", admin_shops: "ตั้งค่ารายชื่อร้านค้า (แยกตาม Zone)", admin_checks: "ตั้งค่ารายละเอียดการตรวจสอบ", admin_checks_desc: "*ระบบจะรันหมายเลขข้อให้อัตโนมัติ",
+        add_user: "เพิ่มบัญชีใหม่", btn_add: "เพิ่ม", btn_save: "บันทึก", btn_cancel: "ยกเลิก", btn_confirm: "ยืนยัน", btn_prev: "« ก่อนหน้า", btn_next: "ถัดไป »",
+        col_shop: "รายชื่อร้านค้า", col_total: "รวม", col_percent: "% ตรวจ", col_date: "วันที่", col_type: "ประเภทผู้ตรวจ", col_auditor: "ผู้ตรวจสอบ", col_status: "ผลประเมิน", col_manage: "จัดการ",
+        matrix_title: "สรุปความถี่ของ:", detail_title: "ผลรายละเอียดการตรวจรายวัน", show_lbl: "แสดง:", no_data: "ไม่มีข้อมูล", role_user: "สิทธิ์: User", role_admin: "สิทธิ์: Admin",
+        ph_user: "Username", ph_pass: "Password", ph_shop: "ชื่อร้านค้า...", ph_check: "ระบุรายละเอียดขั้นตอน...", ph_role: "เช่น Manager...", ph_auditor: "ระบุชื่อ-นามสกุล",
+        btn_refresh: "รีเฟรชข้อมูล", file_selected: "เลือกไฟล์แล้ว",
+        del_title: "ยืนยันการลบ", del_desc: "คุณแน่ใจหรือไม่ที่จะลบข้อมูลรายการนี้ออกจากระบบ?", del_warn: "*การกระทำนี้ไม่สามารถย้อนกลับได้", btn_del_confirm: "ยืนยันลบ",
+        toast_logging_in: "กำลังตรวจสอบข้อมูลเข้าสู่ระบบ...",
+        toast_prep_img: "กำลังเตรียมข้อมูลรูปภาพ...", toast_upload_bg: "ระบบกำลังอัปโหลดข้อมูลเบื้องหลัง ทำงานต่อได้ทันที",
+        toast_login_succ: "เข้าสู่ระบบสำเร็จ", toast_sess_exp: "Session หมดอายุ กรุณาเข้าสู่ระบบใหม่",
+        toast_update_bg: "กำลังอัปเดตข้อมูลเบื้องหลัง...", toast_override_succ: "แก้ไขผลสำเร็จ",
+        toast_sel_month: "กรุณาเลือกเดือน", toast_no_data: "ไม่มีข้อมูล",
+        toast_saving_bg: "กำลังบันทึกข้อมูลเบื้องหลัง...", toast_edit_succ: "✏️ บันทึกการแก้ไขเรียบร้อยแล้ว", toast_edit_user_succ: "🔒 บันทึกการแก้ไขบัญชีเรียบร้อย",
+        toast_req_shop: "กรุณากรอกชื่อร้านค้า", toast_add_shop_succ: "✅ เพิ่มร้านค้าสำเร็จ",
+        toast_req_check: "กรุณาระบุรายละเอียดรายการตรวจ", toast_add_check_succ: "✅ เพิ่มรายการตรวจสำเร็จ",
+        toast_req_role: "กรุณาระบุชื่อประเภทผู้ตรวจสอบ", toast_add_role_succ: "✅ เพิ่มประเภทผู้ตรวจสำเร็จ",
+        toast_req_userpass: "กรุณากรอก Username และ Password", toast_add_user_succ: "✅ เพิ่มบัญชีสำเร็จ",
+        toast_del_bg: "กำลังลบข้อมูลเบื้องหลัง...", toast_del_succ: "🗑️ ลบข้อมูลออกจากระบบสำเร็จ",
+        zone1: "Zone Public Lane", zone2: "Zone Public Market", zone3: "Zone Lofter", zone4: "% ARABICA / Starbucks / Greyhound", zone5: "ห้องอาหารพนักงาน",
+        zone1_full: "Zone Public Lane ชั้น 1", zone2_full: "Zone Public Market ชั้น 1", zone3_full: "Zone Lofter ชั้น 6", zone4_full: "% ARABICA / Starbucks / Greyhound Café", zone5_full: "ห้องอาหารพนักงาน",
+        db_manager: "ผู้จัดการ", db_staff: "พนักงาน", db_supervisor: "หัวหน้างาน", db_security: "รปภ.", db_technician: "ช่างเทคนิค"
+      },
+      en: {
+        sys_subtitle: "Store Safety Checklist System", tab_dashboard: "Dashboard", tab_admin: "Settings",
+        lbl_date: "1. Inspection Date", lbl_auditor: "2. Auditor Name", lbl_role: "3. Inspector Role", lbl_shop: "4. Select Shop", lbl_details: "5. Safety Checklist Details",
+        lbl_attach: "6. Attach Images", lbl_optional: "(Optional)",
+        img_gas: "📸 Gas Valve", img_water: "📸 Water Valve", img_overall: "📸 Overall Shop",
+        btn_submit: "Submit Checklist", lbl_login: "Sign In", btn_login: "Login", btn_logout: "Logout",
+        loading: "Processing...", select_shop: "--- Select a shop ---", select_role: "--- Select a role ---",
+        no_checklist: "No checklist items found.", rad_pass: "Pass", rad_fail: "Fail", rad_na: "N/A", reason_ph: "Enter reason...", reason_lbl: "Remark:",
+        dashboard_title: "Summary Dashboard", dashboard_desc: "Click ✕ or ✓ in the table to override results.", dashboard_month: "📅 Month:",
+        item_water: "Check Water Valve", item_gas: "Check Gas Valve", item_light: "Check Lighting", item_overall: "Check Overall Area",
+        override_title: "Confirm Edit", override_desc: "Edit past inspection result for", override_lbl_status: "Status to update", override_opt_checked: "✅ Checked", override_opt_unchecked: "❌ Unchecked",
+        edit_text_title: "Edit Information", edit_text_lbl: "Enter new data", edit_user_title: "Edit Account", edit_pass_lbl: "New Password (optional)", edit_role_lbl: "Role",
+        admin_roles: "Inspector Roles", admin_users: "Manage Users", admin_shops: "Shop Settings", admin_checks: "Checklist Settings", admin_checks_desc: "*Numbers auto-generate.",
+        add_user: "Add New Account", btn_add: "Add", btn_save: "Save", btn_cancel: "Cancel", btn_confirm: "Confirm", btn_prev: "« Prev", btn_next: "Next »",
+        col_shop: "Shop Name", col_total: "Total", col_percent: "% Checked", col_date: "Date", col_type: "Role", col_auditor: "Auditor", col_status: "Status", col_manage: "Action",
+        matrix_title: "Frequency Summary:", detail_title: "Daily Inspection Details", show_lbl: "Show:", no_data: "No data", role_user: "Role: User", role_admin: "Role: Admin",
+        ph_user: "Username", ph_pass: "Password", ph_shop: "Shop name...", ph_check: "Checklist details...", ph_role: "e.g., Manager...", ph_auditor: "Full name",
+        btn_refresh: "Refresh Data", file_selected: "File selected",
+        del_title: "Confirm Delete", del_desc: "Are you sure you want to remove this item?", del_warn: "*This action cannot be undone.", btn_del_confirm: "Delete",
+        toast_logging_in: "Verifying login details...",
+        toast_prep_img: "Preparing images...", toast_upload_bg: "Uploading in background. You can continue working.",
+        toast_login_succ: "Login successful", toast_sess_exp: "Session expired. Please log in again.",
+        toast_update_bg: "Updating in background...", toast_override_succ: "Override successful",
+        toast_sel_month: "Please select a month", toast_no_data: "No data available",
+        toast_saving_bg: "Saving in background...", toast_edit_succ: "✏️ Edit saved successfully", toast_edit_user_succ: "🔒 Account updated successfully",
+        toast_req_shop: "Please enter shop name", toast_add_shop_succ: "✅ Shop added successfully",
+        toast_req_check: "Please enter checklist details", toast_add_check_succ: "✅ Checklist added successfully",
+        toast_req_role: "Please enter role name", toast_add_role_succ: "✅ Role added successfully",
+        toast_req_userpass: "Please enter Username and Password", toast_add_user_succ: "✅ Account added successfully",
+        toast_del_bg: "Deleting in background...", toast_del_succ: "🗑️ Item deleted successfully",
+        zone1: "Zone Public Lane", zone2: "Zone Public Market", zone3: "Zone Lofter", zone4: "% ARABICA / Starbucks / Greyhound", zone5: "Staff Canteen",
+        zone1_full: "Zone Public Lane 1st Fl.", zone2_full: "Zone Public Market 1st Fl.", zone3_full: "Zone Lofter 6th Fl.", zone4_full: "% ARABICA / Starbucks / Greyhound Café", zone5_full: "Staff Canteen",
+        db_manager: "Manager", db_staff: "Staff", db_supervisor: "Supervisor", db_security: "Security Guard", db_technician: "Technician"
+      },
+      la: {
+        sys_subtitle: "ລະບົບກວດສອບຄວາມປອດໄພຮ້ານຄ້າ", tab_dashboard: "ແດຊບອດ", tab_admin: "ຕັ້ງຄ່າລະບົບ",
+        lbl_date: "1. ວັນທີກວດສອບ", lbl_auditor: "2. ຊື່-ນາມສະກຸນ ຜູ້ກວດສອບ", lbl_role: "3. ປະເພດຜູ້ກວດສອບ", lbl_shop: "4. ລະບຸຊື່ຮ້ານຄ້າ", lbl_details: "5. ລາຍລະອຽດການກວດສອບ",
+        lbl_attach: "6. ແນບຮູບພາບ", lbl_optional: "(ບໍ່ບັງຄັບ)",
+        img_gas: "📸 ປ່ຽງແກັສ", img_water: "📸 ປ່ຽງນ້ຳ", img_overall: "📸 ພາບລວມ",
+        btn_submit: "ສົ່ງແບບຟອມບັນທຶກຂໍ້ມູນ", lbl_login: "ເຂົ້າສູ່ລະບົບ", btn_login: "ເຂົ້າສູ່ລະບົບ", btn_logout: "ອອກຈາກລະບົບ",
+        loading: "ກຳລັງປະມວນຜົນ...", select_shop: "--- ເລືອກຮ້ານຄ້າ ---", select_role: "--- ເລືອກປະເພດຜູ້ກວດສອບ ---",
+        no_checklist: "ບໍ່ມີຂໍ້ມູນຫົວຂໍ້ການກວດສອບ", rad_pass: "ຮຽບຮ້ອຍ", rad_fail: "ບໍ່ຮຽບຮ້ອຍ", rad_na: "ບໍ່ມີ", reason_ph: "ລະບຸສາເຫດ...", reason_lbl: "ໝາຍເຫດ:",
+        dashboard_title: "ແດຊບອດສະຫຼຸບຜົນ", dashboard_desc: "ຄລິກ ✕ ຫຼື ✓ ໃນຕາຕະລາງ ເພື່ອແກ້ໄຂ", dashboard_month: "📅 ເດືອນ:",
+        item_water: "ກວດສອບປ່ຽງນ້ຳ", item_gas: "ກວດສອບປ່ຽງແກັສ", item_light: "ກວດສອບໄຟແສງສະຫວ່າງ", item_overall: "ກວດສອບພາບລວມບໍລິເວນພື້ນທີ່",
+        override_title: "ຢືນຢັນການແກ້ໄຂ", override_desc: "ແກ້ໄຂຜົນການກວດສອບສຳລັບວັນທີ", override_lbl_status: "ສະຖານະທີ່ຕ້ອງການແກ້ໄຂ", override_opt_checked: "✅ ກວດແລ້ວ", override_opt_unchecked: "❌ ຍັງບໍ່ໄດ້ກວດ",
+        edit_text_title: "ແກ້ໄຂຂໍ້ມູນ", edit_text_lbl: "ລະບຸຂໍ້ມູນໃໝ່", edit_user_title: "ແກ້ໄຂບັນຊີ", edit_pass_lbl: "ລະຫັດຜ່ານໃໝ່ (ປ່ອຍຫວ່າງຖ້າບໍ່ປ່ຽນ)", edit_role_lbl: "ສິດການນຳໃຊ້ (Role)",
+        admin_roles: "ປະເພດຜູ້ກວດສອບ", admin_users: "ຈັດການບັນຊີຜູ້ໃຊ້ (Users)", admin_shops: "ຕັ້ງຄ່າລາຍຊື່ຮ້ານຄ້າ", admin_checks: "ຕັ້ງຄ່າລາຍລະອຽດການກວດສອບ", admin_checks_desc: "*ລະບົບຈະລັນໝາຍເລກຂໍ້ໃຫ້ອັດຕະໂນມັດ",
+        add_user: "ເພີ່ມບັນຊີໃໝ່", btn_add: "ເພີ່ມ", btn_save: "ບັນທຶກ", btn_cancel: "ຍົກເລີກ", btn_confirm: "ຢືນຢັນ", btn_prev: "« ກ່ອນໜ້າ", btn_next: "ຖັດໄປ »",
+        col_shop: "ລາຍຊື່ຮ້ານຄ້າ", col_total: "ລວມ", col_percent: "% ກວດ", col_date: "ວັນທີ", col_type: "ປະເພດ", col_auditor: "ຜູ້ກວດສອບ", col_status: "ສະຖານະ", col_manage: "ຈັດການ",
+        matrix_title: "ສະຫຼຸບຄວາມຖີ່ຂອງ:", detail_title: "ຜົນການກວດລາຍວັນ", show_lbl: "ສະແດງ:", no_data: "ບໍ່ມີຂໍ້ມູນ", role_user: "ສິດ: User", role_admin: "ສິດ: Admin",
+        ph_user: "Username", ph_pass: "Password", ph_shop: "ຊື່ຮ້ານຄ້າ...", ph_check: "ລະບຸລາຍລະອຽດຂັ້ນຕອນ...", ph_role: "ເຊັ່ນ Manager...", ph_auditor: "ລະບຸຊື່-ນາມສະກຸນ",
+        btn_refresh: "ໂຫຼດຂໍ້ມູນໃໝ່", file_selected: "ເລືອກໄຟລ໌ແລ້ວ",
+        del_title: "ຢືນຢັນການລຶບ", del_desc: "ທ່ານແນ່ໃຈບໍ່ທີ່ຈະລຶບຂໍ້ມູນນີ້?", del_warn: "*ການກະທຳນີ້ບໍ່ສາມາດຍົກເລີກໄດ້", btn_del_confirm: "ຢືນຢັນລຶບ",
+        toast_logging_in: "ກຳລັງກວດສອບຂໍ້ມູນເຂົ້າສູ່ລະບົບ...",
+        toast_prep_img: "ກຳລັງກຽມຮູບພາບ...", toast_upload_bg: "ອັບໂຫຼດຂໍ້ມູນເບື້ອງຫຼັງສຳເລັດແລ້ວ",
+        toast_login_succ: "ເຂົ້າສູ່ລະບົບສຳເລັດ", toast_sess_exp: "ເຊດຊັນໝົດອາຍຸ ກະລຸນາເຂົ້າລະບົບໃໝ່",
+        toast_update_bg: "ກຳລັງອັບເດດຂໍ້ມູນ...", toast_override_succ: "ແກ້ໄຂສຳເລັດ",
+        toast_sel_month: "ກະລຸນາເລືອກເດືອນ", toast_no_data: "ບໍ່ມີຂໍ້ມູນ",
+        toast_saving_bg: "ກຳລັງບັນທຶກຂໍ້ມູນ...", toast_edit_succ: "✏️ ບັນທຶກສຳເລັດແລ້ວ", toast_edit_user_succ: "🔒 ບັນທຶກບັນຊີສຳເລັດ",
+        toast_req_shop: "ກະລຸນາໃສ່ຊື່ຮ້ານ", toast_add_shop_succ: "✅ ເພີ່ມຮ້ານສຳເລັດ",
+        toast_req_check: "ກະລຸນາໃສ່ລາຍລະອຽດ", toast_add_check_succ: "✅ ເພີ່ມລາຍການສຳເລັດ",
+        toast_req_role: "ກະລຸນາໃສ່ປະເພດຜູ້ກວດ", toast_add_role_succ: "✅ ເພີ່ມປະເພດສຳເລັດ",
+        toast_req_userpass: "ກະລຸນາໃສ່ຊື່ຜູ້ໃຊ້ ແລະ ລະຫັດ", toast_add_user_succ: "✅ ເພີ່ມບັນຊີສຳເລັດ",
+        toast_del_bg: "ກຳລັງລຶບຂໍ້ມູນ...", toast_del_succ: "🗑️ ລຶບຂໍ້ມູນສຳເລັດ",
+        zone1: "Zone Public Lane", zone2: "Zone Public Market", zone3: "Zone Lofter", zone4: "% ARABICA / Starbucks / Greyhound", zone5: "ໂຮງອາຫານພະນັກງານ",
+        zone1_full: "Zone Public Lane ຊັ້ນ 1", zone2_full: "Zone Public Market ຊັ້ນ 1", zone3_full: "Zone Lofter ຊັ້ນ 6", zone4_full: "% ARABICA / Starbucks / Greyhound Café", zone5_full: "ໂຮງອາຫານພະນັກງານ",
+        db_manager: "ຜູ້ຈັດການ", db_staff: "ພະນັກງານ", db_supervisor: "ຫົວໜ້າງານ", db_security: "ລປພ", db_technician: "ຊ່າງເຕັກນິກ"
+      },
+      mm: {
+        sys_subtitle: "စတိုးဆိုင်လုံခြုံရေးစစ်ဆေးမှုစနစ်", tab_dashboard: "ဒက်ရှ်ဘုတ်", tab_admin: "ဆက်တင်များ",
+        lbl_date: "1. စစ်ဆေးသည့်ရက်စွဲ", lbl_auditor: "2. စစ်ဆေးသူအမည်", lbl_role: "3. စစ်ဆေးသူအမျိုးအစား", lbl_shop: "4. ဆိုင်အမည်ကိုရွေးပါ", lbl_details: "5. လုံခြုံရေးစစ်ဆေးမှုအသေးစိတ်",
+        lbl_attach: "6. ဓာတ်ပုံပူးတွဲပါ", lbl_optional: "(မဖြစ်မနေမဟုတ်ပါ)",
+        img_gas: "📸 ဂက်စ်အဆို့ရှင်", img_water: "📸 ရေအဆို့ရှင်", img_overall: "📸 ဆိုင်တစ်ခုလုံး",
+        btn_submit: "တင်သွင်းမည်", lbl_login: "အကောင့်ဝင်ရန်", btn_login: "အကောင့်ဝင်ရန်", btn_logout: "ထွက်ရန်",
+        loading: "လုပ်ဆောင်နေသည်...", select_shop: "--- ဆိုင်ကိုရွေးပါ ---", select_role: "--- အမျိုးအစားကိုရွေးပါ ---",
+        no_checklist: "စစ်ဆေးရန်အချက်အလက်မရှိပါ။", rad_pass: "ကောင်းမွန်သည်", rad_fail: "မကောင်းမွန်ပါ", rad_na: "မသက်ဆိုင်ပါ", reason_ph: "အကြောင်းရင်းရေးပါ...", reason_lbl: "မှတ်ချက်:",
+        dashboard_title: "အကျဉ်းချုပ် ဒက်ရှ်ဘုတ်", dashboard_desc: "ဇယားရှိ ✕ သို့မဟုတ် ✓ ကိုနှိပ်၍ ပြင်ဆင်ပါ။", dashboard_month: "📅 လ:",
+        item_water: "ရေအဆို့ရှင်ကိုစစ်ဆေးပါ", item_gas: "ဂက်စ်အဆို့ရှင်ကိုစစ်ဆေးပါ", item_light: "မီးအလင်းရောင်စစ်ဆေးပါ", item_overall: "ဧရိယာတစ်ခုလုံးကိုစစ်ဆေးပါ",
+        override_title: "ပြင်ဆင်မှုကိုအတည်ပြုပါ", override_desc: "စစ်ဆေးမှုရလဒ်ကိုပြင်ဆင်ရန်", override_lbl_status: "ပြောင်းလဲလိုသောအခြေအနေ", override_opt_checked: "✅ စစ်ဆေးပြီး", override_opt_unchecked: "❌ မစစ်ဆေးရသေးပါ",
+        edit_text_title: "အချက်အလက်ပြင်ရန်", edit_text_lbl: "အချက်အလက်အသစ်ထည့်ပါ", edit_user_title: "အကောင့်ပြင်ရန်", edit_pass_lbl: "စကားဝှက်အသစ် (ချန်ထားနိုင်သည်)", edit_role_lbl: "အခန်းကဏ္ဍ (Role)",
+        admin_roles: "စစ်ဆေးသူအမျိုးအစားများ", admin_users: "အသုံးပြုသူများကိုစီမံရန်", admin_shops: "ဆိုင်စာရင်းဆက်တင်များ", admin_checks: "စစ်ဆေးရန်အချက်များဆက်တင်", admin_checks_desc: "*နံပါတ်များကိုအလိုအလျောက်ထုတ်ပေးပါမည်",
+        add_user: "အကောင့်အသစ်ထည့်ရန်", btn_add: "ထည့်ရန်", btn_save: "သိမ်းဆည်းရန်", btn_cancel: "ပယ်ဖျက်ရန်", btn_confirm: "အတည်ပြုရန်", btn_prev: "« ယခင်", btn_next: "နောက်သို့ »",
+        col_shop: "ဆိုင်အမည်", col_total: "စုစုပေါင်း", col_percent: "% စစ်ဆေးပြီး", col_date: "ရက်စွဲ", col_type: "အမျိုးအစား", col_auditor: "စစ်ဆေးသူ", col_status: "အခြေအနေ", col_manage: "စီမံရန်",
+        matrix_title: "အကြိမ်ရေ အကျဉ်းချုပ်:", detail_title: "နေ့စဉ်စစ်ဆေးမှုအသေးစိတ်", show_lbl: "ပြသရန်:", no_data: "အချက်အလက်မရှိပါ", role_user: "အခန်းကဏ္ဍ: User", role_admin: "အခန်းကဏ္ဍ: Admin",
+        ph_user: "Username", ph_pass: "Password", ph_shop: "ဆိုင်အမည်...", ph_check: "အသေးစိတ်ရေးပါ...", ph_role: "ဥပမာ Manager...", ph_auditor: "အမည်အပြည့်အစုံ",
+        btn_refresh: "ဒေတာကို ပြန်လည်စတင်ပါ", file_selected: "ဖိုင်ရွေးချယ်ပြီးပါပြီ",
+        del_title: "ဖျက်ရန် အတည်ပြုပါ", del_desc: "ဤအချက်အလက်ကို ဖျက်ရန် သေချာပါသလား?", del_warn: "*ဖျက်ပြီးပါက ပြန်ယူ၍မရပါ။", btn_del_confirm: "ဖျက်မည်",
+        toast_logging_in: "အကောင့်ဝင်ရန်စစ်ဆေးနေသည်...",
+        toast_prep_img: "ဓာတ်ပုံပြင်ဆင်နေသည်...", toast_upload_bg: "နောက်ကွယ်တွင် အပ်လုဒ်လုပ်နေပါသည်။",
+        toast_login_succ: "အကောင့်ဝင်ခြင်း အောင်မြင်သည်", toast_sess_exp: "သက်တမ်းကုန်သွားပါပြီ။ ပြန်လည်ဝင်ရောက်ပါ။",
+        toast_update_bg: "နောက်ကွယ်တွင် အပ်ဒိတ်လုပ်နေသည်...", toast_override_succ: "ပြင်ဆင်မှု အောင်မြင်သည်",
+        toast_sel_month: "လကို ရွေးချယ်ပါ", toast_no_data: "ဒေတာမရှိပါ",
+        toast_saving_bg: "နောက်ကွယ်တွင် သိမ်းဆည်းနေပါသည်...", toast_edit_succ: "✏️ ပြင်ဆင်မှုကို သိမ်းဆည်းပြီးပါပြီ", toast_edit_user_succ: "🔒 အကောင့်ကို အပ်ဒိတ်လုပ်ပြီးပါပြီ",
+        toast_req_shop: "ဆိုင်အမည်ကို ထည့်ပါ", toast_add_shop_succ: "✅ ဆိုင်အမည် ထည့်သွင်းပြီးပါပြီ",
+        toast_req_check: "အသေးစိတ်ကို ထည့်ပါ", toast_add_check_succ: "✅ စစ်ဆေးရန်အချက် ထည့်သွင်းပြီးပါပြီ",
+        toast_req_role: "အမျိုးအစားအမည်ကို ထည့်ပါ", toast_add_role_succ: "✅ အမျိုးအစား ထည့်သွင်းပြီးပါပြီ",
+        toast_req_userpass: "Username နှင့် Password ထည့်ပါ", toast_add_user_succ: "✅ အကောင့်အသစ် ထည့်သွင်းပြီးပါပြီ",
+        toast_del_bg: "နောက်ကွယ်တွင် ဖျက်နေပါသည်...", toast_del_succ: "🗑️ အချက်အလက်ဖျက်ပြီးပါပြီ",
+        zone1: "Zone Public Lane", zone2: "Zone Public Market", zone3: "Zone Lofter", zone4: "% ARABICA / Starbucks / Greyhound", zone5: "ဝန်ထမ်း စားသောက်ခန်း",
+        zone1_full: "Zone Public Lane ၁ ထပ်", zone2_full: "Zone Public Market ၁ ထပ်", zone3_full: "Zone Lofter ၆ ထပ်", zone4_full: "% ARABICA / Starbucks / Greyhound Café", zone5_full: "ဝန်ထမ်း စားသောက်ခန်း",
+        db_manager: "မန်နေဂျာ", db_staff: "ဝန်ထမ်း", db_supervisor: "ကြီးကြပ်ရေးမှူး", db_security: "လုံခြုံရေး", db_technician: "နည်းပညာရှင်"
+      },
+      kh: {
+        sys_subtitle: "ប្រព័ន្ធត្រួតពិនិត្យសុវត្ថិភាពហាង", tab_dashboard: "ផ្ទាំងគ្រប់គ្រង", tab_admin: "ការកំណត់",
+        lbl_date: "1. កាលបរិច្ឆេទត្រួតពិនិត្យ", lbl_auditor: "2. ឈ្មោះអ្នកត្រួតពិនិត្យ", lbl_role: "3. ប្រភេទអ្នកត្រួតពិនិត្យ", lbl_shop: "4. ជ្រើសរើសហាង", lbl_details: "5. ព័ត៌មានលម្អិតនៃការត្រួតពិនិត្យ",
+        lbl_attach: "6. ភ្ជាប់រូបភាព", lbl_optional: "(មិនចាំបាច់)",
+        img_gas: "📸 សន្ទះឧស្ម័ន", img_water: "📸 សន្ទះទឹក", img_overall: "📸 រូបភាពរួម",
+        btn_submit: "បញ្ជូនទម្រង់", lbl_login: "ចូលគណនី", btn_login: "ចូល", btn_logout: "ចាកចេញ",
+        loading: "កំពុងដំណើរការ...", select_shop: "--- ជ្រើសរើសហាង ---", select_role: "--- ជ្រើសរើសប្រភេទ ---",
+        no_checklist: "មិនមានទិន្នន័យត្រួតពិនិត្យទេ។", rad_pass: "រៀបរយ", rad_fail: "មិនរៀបរយ", rad_na: "មិនមាន", reason_ph: "បញ្ជាក់មូលហេតុ...", reason_lbl: "ចំណាំ:",
+        dashboard_title: "ផ្ទាំងគ្រប់គ្រងសង្ខេប", dashboard_desc: "ចុច ✕ ឬ ✓ ក្នុងតារាងដើម្បីកែសម្រួល។", dashboard_month: "📅 ខែ:",
+        item_water: "ពិនិត្យសន្ទះទឹក", item_gas: "ពិនិត្យសន្ទះឧស្ម័ន", item_light: "ពិនិត្យភ្លើងបំភ្លឺ", item_overall: "ពិនិត្យតំបន់រួម",
+        override_title: "បញ្ជាក់ការកែសម្រួល", override_desc: "កែសម្រួលលទ្ធផលសម្រាប់ថ្ងៃទី", override_lbl_status: "ស្ថានភាពដែលត្រូវប្តូរ", override_opt_checked: "✅ បានពិនិត្យ", override_opt_unchecked: "❌ មិនទាន់ពិនិត្យ",
+        edit_text_title: "កែសម្រួលព័ត៌មាន", edit_text_lbl: "បញ្ចូលព័ត៌មានថ្មី", edit_user_title: "កែសម្រួលគណនី", edit_pass_lbl: "ពាក្យសម្ងាត់ថ្មី (ទុកចោលបើមិនប្តូរ)", edit_role_lbl: "សិទ្ធិប្រើប្រាស់ (Role)",
+        admin_roles: "ប្រភេទអ្នកត្រួតពិនិត្យ", admin_users: "គ្រប់គ្រងអ្នកប្រើប្រាស់", admin_shops: "កំណត់ឈ្មោះហាង", admin_checks: "កំណត់ការត្រួតពិនិត្យ", admin_checks_desc: "*លេខនឹងត្រូវបានបង្កើតដោយស្វ័យប្រវត្តិ",
+        add_user: "បន្ថែមគណនីថ្មី", btn_add: "បន្ថែម", btn_save: "រក្សាទុក", btn_cancel: "បោះបង់", btn_confirm: "បញ្ជាក់", btn_prev: "« មុន", btn_next: "បន្ទាប់ »",
+        col_shop: "ឈ្មោះហាង", col_total: "សរុប", col_percent: "% ពិនិត្យ", col_date: "កាលបរិច្ឆេទ", col_type: "ប្រភេទ", col_auditor: "អ្នកត្រួតពិនិត្យ", col_status: "ស្ថានភាព", col_manage: "គ្រប់គ្រង",
+        matrix_title: "សង្ខេបប្រេកង់:", detail_title: "ព័ត៌មានលម្អិតប្រចាំថ្ងៃ", show_lbl: "បង្ហាញ:", no_data: "គ្មានទិន្នន័យ", role_user: "សិទ្ធិ: User", role_admin: "សិទ្ធិ: Admin",
+        ph_user: "Username", ph_pass: "Password", ph_shop: "ឈ្មោះហាង...", ph_check: "ព័ត៌មានលម្អិត...", ph_role: "ឧ. Manager...", ph_auditor: "ឈ្មោះពេញ",
+        btn_refresh: "ផ្ទុកឡើងវិញ", file_selected: "បានជ្រើសរើសឯកសារ",
+        del_title: "បញ្ជាក់ការលុប", del_desc: "តើអ្នកប្រាកដថាចង់លុបទិន្នន័យនេះទេ?", del_warn: "*សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។", btn_del_confirm: "លុប",
+        toast_logging_in: "កំពុងផ្ទៀងផ្ទាត់ការចូល...",
+        toast_prep_img: "កំពុងរៀបចំរូបភាព...", toast_upload_bg: "កំពុងផ្ទុកឡើងនៅផ្ទៃខាងក្រោយ។",
+        toast_login_succ: "ការចូលប្រើបានជោគជ័យ", toast_sess_exp: "វគ្គបានផុតកំណត់។ សូមចូលម្តងទៀត។",
+        toast_update_bg: "កំពុងធ្វើបច្ចុប្បន្នភាពនៅផ្ទៃខាងក្រោយ...", toast_override_succ: "ការកែសម្រួលបានជោគជ័យ",
+        toast_sel_month: "សូមជ្រើសរើសខែ", toast_no_data: "គ្មានទិន្នន័យ",
+        toast_saving_bg: "កំពុងរក្សាទុកនៅផ្ទៃខាងក្រោយ...", toast_edit_succ: "✏️ បានរក្សាទុកការកែសម្រួល", toast_edit_user_succ: "🔒 គណនីត្រូវបានធ្វើបច្ចុប្បន្នភាព",
+        toast_req_shop: "សូមបញ្ចូលឈ្មោះហាង", toast_add_shop_succ: "✅ បានបន្ថែមហាង",
+        toast_req_check: "សូមបញ្ចូលព័ត៌មានលម្អិត", toast_add_check_succ: "✅ បានបន្ថែមការត្រួតពិនិត្យ",
+        toast_req_role: "សូមបញ្ចូលឈ្មោះប្រភេទ", toast_add_role_succ: "✅ បានបន្ថែមប្រភេទ",
+        toast_req_userpass: "សូមបញ្ចូលឈ្មោះ និងពាក្យសម្ងាត់", toast_add_user_succ: "✅ បានបន្ថែមគណនី",
+        toast_del_bg: "កំពុងលុបនៅផ្ទៃខាងក្រោយ...", toast_del_succ: "🗑️ ទិន្នន័យត្រូវបានលុប",
+        zone1: "Zone Public Lane", zone2: "Zone Public Market", zone3: "Zone Lofter", zone4: "% ARABICA / Starbucks / Greyhound", zone5: "អាហារដ្ឋានបុគ្គលិក",
+        zone1_full: "Zone Public Lane ជាន់ទី ១", zone2_full: "Zone Public Market ជាន់ទី ១", zone3_full: "Zone Lofter ជាន់ទី ៦", zone4_full: "% ARABICA / Starbucks / Greyhound Café", zone5_full: "អាហារដ្ឋានបុគ្គលិក",
+        db_manager: "អ្នកគ្រប់គ្រង", db_staff: "បុគ្គលិក", db_supervisor: "ប្រធានផ្នែក", db_security: "សន្តិសុខ", db_technician: "ជាងបច្ចេកទេស"
+      },
+      id: {
+        sys_subtitle: "Sistem Checklist Keamanan Toko", tab_dashboard: "Dasbor", tab_admin: "Pengaturan",
+        lbl_date: "1. Tanggal Inspeksi", lbl_auditor: "2. Nama Inspektur", lbl_role: "3. Peran Inspektur", lbl_shop: "4. Pilih Toko", lbl_details: "5. Detail Checklist Keamanan",
+        lbl_attach: "6. Lampirkan Foto", lbl_optional: "(Opsional)",
+        img_gas: "📸 Katup Gas", img_water: "📸 Katup Air", img_overall: "📸 Area Toko Keseluruhan",
+        btn_submit: "Kirim Formulir", lbl_login: "Masuk", btn_login: "Login", btn_logout: "Logout",
+        loading: "Memproses...", select_shop: "--- Pilih Toko ---", select_role: "--- Pilih Peran ---",
+        no_checklist: "Tidak ada daftar periksa.", rad_pass: "Lulus", rad_fail: "Gagal", rad_na: "N/A", reason_ph: "Masukkan alasan...", reason_lbl: "Keterangan:",
+        dashboard_title: "Ringkasan Dasbor", dashboard_desc: "Klik ✕ atau ✓ pada tabel untuk mengubah hasil.", dashboard_month: "📅 Bulan:",
+        item_water: "Periksa Katup Air", item_gas: "Periksa Katup Gas", item_light: "Periksa Pencahayaan", item_overall: "Periksa Area Keseluruhan",
+        override_title: "Konfirmasi Perubahan", override_desc: "Ubah hasil inspeksi untuk tanggal", override_lbl_status: "Status", override_opt_checked: "✅ Sudah Diperiksa", override_opt_unchecked: "❌ Belum Diperiksa",
+        edit_text_title: "Edit Informasi", edit_text_lbl: "Masukkan data baru", edit_user_title: "Edit Akun", edit_pass_lbl: "Kata Sandi Baru (opsional)", edit_role_lbl: "Peran",
+        admin_roles: "Peran Inspektur", admin_users: "Kelola Pengguna", admin_shops: "Pengaturan Toko", admin_checks: "Pengaturan Checklist", admin_checks_desc: "*Nomor otomatis dibuat.",
+        add_user: "Tambah Akun Baru", btn_add: "Tambah", btn_save: "Simpan", btn_cancel: "Batal", btn_confirm: "Konfirmasi", btn_prev: "« Seb", btn_next: "Lanjut »",
+        col_shop: "Nama Toko", col_total: "Total", col_percent: "% Diperiksa", col_date: "Tanggal", col_type: "Peran", col_auditor: "Inspektur", col_status: "Status", col_manage: "Kelola",
+        matrix_title: "Ringkasan Frekuensi:", detail_title: "Detail Inspeksi Harian", show_lbl: "Tampilkan:", no_data: "Tidak ada data", role_user: "Peran: User", role_admin: "Peran: Admin",
+        ph_user: "Username", ph_pass: "Password", ph_shop: "Nama toko...", ph_check: "Detail checklist...", ph_role: "Contoh: Manager...", ph_auditor: "Nama lengkap",
+        btn_refresh: "Segarkan Data", file_selected: "File Dipilih",
+        del_title: "Konfirmasi Hapus", del_desc: "Apakah Anda yakin ingin menghapus data ini?", del_warn: "*Tindakan ini tidak dapat dibatalkan.", btn_del_confirm: "Hapus",
+        toast_logging_in: "Memverifikasi login...",
+        toast_prep_img: "Menyiapkan gambar...", toast_upload_bg: "Mengunggah di latar belakang...",
+        toast_login_succ: "Login berhasil", toast_sess_exp: "Sesi berakhir. Silakan login lagi.",
+        toast_update_bg: "Memperbarui di latar belakang...", toast_override_succ: "Berhasil diubah",
+        toast_sel_month: "Silakan pilih bulan", toast_no_data: "Tidak ada data",
+        toast_saving_bg: "Menyimpan di latar belakang...", toast_edit_succ: "✏️ Perubahan berhasil disimpan", toast_edit_user_succ: "🔒 Akun berhasil diperbarui",
+        toast_req_shop: "Masukkan nama toko", toast_add_shop_succ: "✅ Toko berhasil ditambahkan",
+        toast_req_check: "Masukkan detail checklist", toast_add_check_succ: "✅ Checklist berhasil ditambahkan",
+        toast_req_role: "Masukkan nama peran", toast_add_role_succ: "✅ Peran berhasil ditambahkan",
+        toast_req_userpass: "Masukkan Username dan Password", toast_add_user_succ: "✅ Akun berhasil ditambahkan",
+        toast_del_bg: "Menghapus di latar belakang...", toast_del_succ: "🗑️ Data berhasil dihapus",
+        zone1: "Zone Public Lane", zone2: "Zone Public Market", zone3: "Zone Lofter", zone4: "% ARABICA / Starbucks / Greyhound", zone5: "Kantin Karyawan",
+        zone1_full: "Zone Public Lane Lt. 1", zone2_full: "Zone Public Market Lt. 1", zone3_full: "Zone Lofter Lt. 6", zone4_full: "% ARABICA / Starbucks / Greyhound Café", zone5_full: "Kantin Karyawan",
+        db_manager: "Manajer", db_staff: "Staf", db_supervisor: "Penyelia", db_security: "Keamanan", db_technician: "Teknisi"
+      }
+    };
+
+    let currentLang = 'th';
+    function showToast(messageKey, type = 'success') {
+      const dict = i18n[currentLang];
+      const actualMessage = dict[messageKey] || messageKey; 
+      const toast = document.createElement('div');
+      let bgColor = 'bg-emerald-500';
+      let icon = '✅';
+      if(type === 'error') { bgColor = 'bg-red-500'; icon = '❌'; }
+      if(type === 'info') { bgColor = 'bg-blue-500'; icon = 'ℹ️'; }
+      
+      toast.className = `${bgColor} text-white px-6 py-4 rounded-xl shadow-2xl transform transition-all duration-300 translate-x-full opacity-0 flex items-center gap-3 font-semibold text-sm border border-white/20 z-[99999]`;
+      toast.innerHTML = `<span>${icon}</span> <span>${actualMessage}</span>`;
+      
+      document.getElementById('toastContainer').appendChild(toast);
+      
+      setTimeout(() => toast.classList.remove('translate-x-full', 'opacity-0'), 10);
+      setTimeout(() => { toast.classList.add('translate-x-full', 'opacity-0'); setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+
+    function toggleLangMenu() { document.getElementById('langMenu').classList.toggle('dropdown-open'); }
+    function setLang(langCode, icon, text) {
+      currentLang = langCode; document.getElementById('currentLangIcon').innerText = icon;
+      document.getElementById('currentLangText').innerText = text; document.getElementById('langMenu').classList.remove('dropdown-open'); 
+      applyLanguage(); renderFormElements();
+      if (isAdminAuthenticated && !document.getElementById('dashboardSection').classList.contains('hidden')) renderDashboard();
+      if (isAdminAuthenticated && !document.getElementById('adminSettingsSection').classList.contains('hidden')) renderAdminDashboard();
+    }
+    
+    function applyLanguage() {
+      const dict = i18n[currentLang];
+      document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.getAttribute('data-i18n'); if (dict[key]) el.innerHTML = dict[key]; });
+      document.querySelectorAll('[data-i18n-ph]').forEach(el => { const key = el.getAttribute('data-i18n-ph'); if (dict[key]) el.placeholder = dict[key]; });
+    }
+
+    function translateDBItem(text) {
+        if(!text) return text;
+        const dict = i18n[currentLang];
+        if(!dict) return text;
+        
+        if(text === "Zone Public Lane ชั้น 1") return dict.zone1_full;
+        if(text === "Zone Public Market ชั้น 1") return dict.zone2_full;
+        if(text === "Zone Lofter ชั้น 6") return dict.zone3_full;
+        if(text === "% ARABICA / Starbucks / Greyhound Café") return dict.zone4_full;
+        if(text === "ห้องอาหารพนักงาน") return dict.zone5_full;
+        
+        if(text === "Zone Public Lane") return dict.zone1;
+        if(text === "Zone Public Market") return dict.zone2;
+        if(text === "Zone Lofter") return dict.zone3;
+        
+        const roleMap = {
+            "ผู้จัดการ": dict.db_manager, "Manager": dict.db_manager,
+            "พนักงาน": dict.db_staff, "Staff": dict.db_staff,
+            "หัวหน้างาน": dict.db_supervisor, "Supervisor": dict.db_supervisor,
+            "รปภ.": dict.db_security, "Security": dict.db_security,
+            "ช่างเทคนิค": dict.db_technician, "Technician": dict.db_technician
+        };
+        if(roleMap[text]) return roleMap[text];
+        return text;
+    }
+
+    function translateChecklistItem(originalText) {
+        const dict = i18n[currentLang];
+        if(originalText === "ตรวจสอบวาล์วน้ำ") return dict.item_water;
+        if(originalText === "ตรวจสอบวาล์วแก๊ส") return dict.item_gas;
+        if(originalText === "ตรวจสอบไฟส่องสว่าง") return dict.item_light;
+        if(originalText === "ตรวจสอบภาพรวมบริเวณพื้นที่") return dict.item_overall;
+        return originalText; 
+    }
+
+    function previewImage(input, previewBoxId, inputBoxId, textId) {
+      if (input.files && input.files[0]) {
+        document.getElementById(textId).innerText = input.files[0].name; 
+        document.getElementById(inputBoxId).classList.add('hidden'); 
+        
+        const previewBox = document.getElementById(previewBoxId);
+        previewBox.classList.remove('hidden');
+        previewBox.classList.add('flex');
+      }
+    }
+
+    function removeImage(inputId, previewBoxId, inputBoxId, textId) {
+      document.getElementById(inputId).value = "";
+      document.getElementById(textId).innerText = "";
+      
+      const previewBox = document.getElementById(previewBoxId);
+      previewBox.classList.add('hidden'); 
+      previewBox.classList.remove('flex');
+      
+      document.getElementById(inputBoxId).classList.remove('hidden');
+    }
+
+    function resetAllImages() {
+        removeImage('fileGas', 'preview_fileGas', 'box_fileGas', 'txt_fileGas');
+        removeImage('fileWater', 'preview_fileWater', 'box_fileWater', 'txt_fileWater');
+        removeImage('fileOverall', 'preview_fileOverall', 'box_fileOverall', 'txt_fileOverall');
+    }
+
+    const compressImage = (file, maxWidth = 800, quality = 0.7) => new Promise((resolve, reject) => {
+        if (!file) return resolve("");
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width; let height = img.height;
+                if (width > maxWidth) { height = Math.round((height * maxWidth) / width); width = maxWidth; }
+                canvas.width = width; canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL('image/jpeg', quality)); 
+            };
+            img.onerror = (error) => reject(error);
+        };
+        reader.onerror = (error) => reject(error);
+    });
+
+    let globalData = { inspectorRoles: [], shops: [], checklist: [], users: [], submissions: [] };
+    let currentZone = "Zone Public Lane ชั้น 1";
+    let isAdminAuthenticated = false; 
+    let currentUserRole = ""; 
+    let targetTabAfterLogin = "";
+    let currentAdminUser = ""; let currentAdminPass = ""; 
+
+    let tableConfig = { 
+      "Zone Public Lane ชั้น 1": { page: 1, limit: 10 }, "Zone Public Market ชั้น 1": { page: 1, limit: 10 }, "Zone Lofter ชั้น 6": { page: 1, limit: 10 },
+      "% ARABICA / Starbucks / Greyhound Café": { page: 1, limit: 10 }, "ห้องอาหารพนักงาน": { page: 1, limit: 10 }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const today = new Date();
+      if (today.getHours() < 4) today.setDate(today.getDate() - 1); 
+      document.getElementById('txtDate').valueAsDate = today;
+
+      const now = new Date(); document.getElementById('filterMonth').value = now.toISOString().slice(0, 7);
+      applyLanguage(); refreshData();
+    });
+
+    // --- อัปเดตฟังก์ชันแสดงผล Loading ตรงกลาง ---
+    function showLoading(show, messageKey = 'loading') { 
+      const loader = document.getElementById('loading');
+      if(show) {
+        const dict = i18n[currentLang];
+        document.getElementById('loadingText').innerText = dict[messageKey] || messageKey;
+        loader.classList.remove('hidden');
+        loader.classList.add('flex');
+      } else {
+        loader.classList.add('hidden');
+        loader.classList.remove('flex');
+      }
+    }
+    
+    function refreshData() { 
+      showLoading(true, 'loading');
+      google.script.run.withSuccessHandler((data) => { 
+        globalData = data; renderFormElements(); 
+        if(isAdminAuthenticated) { renderDashboard(); renderAdminDashboard(); } 
+        showLoading(false); 
+      }).getAppData();
+    }
+
+    function switchTab(tabId) {
+      if (isAdminAuthenticated) {
+        if (tabId.startsWith('zone')) { logoutAdmin(); return; }
+        if ((tabId === 'admin' && targetTabAfterLogin === 'dashboard') || (tabId === 'dashboard' && targetTabAfterLogin === 'admin')) { logoutAdmin(true); }
+      }
+
+      if(document.getElementById('safetyForm')) {
+        document.getElementById('safetyForm').reset();
+        resetAllImages();
+        const today = new Date();
+        if (today.getHours() < 4) today.setDate(today.getDate() - 1);
+        document.getElementById('txtDate').valueAsDate = today;
+      }
+
+      if(document.getElementById('adminUser')) {
+        document.getElementById('adminUser').value = '';
+        document.getElementById('adminPass').value = '';
+        document.getElementById('adminPass').type = 'password'; 
+        document.getElementById('loginError').classList.add('hidden'); 
+      }
+
+      ['tab-zone1', 'tab-zone2', 'tab-zone3', 'tab-zone4', 'tab-zone5', 'tab-dashboard', 'tab-admin'].forEach(id => { document.getElementById(id).classList.remove('tab-active'); });
+      ['formSection', 'adminLoginSection', 'dashboardSection', 'adminSettingsSection'].forEach(id => { document.getElementById(id).classList.add('hidden'); });
+
+      if (tabId === 'zone1') { currentZone = "Zone Public Lane ชั้น 1"; document.getElementById('tab-zone1').classList.add('tab-active'); document.getElementById('formSection').classList.remove('hidden'); renderFormElements(); } 
+      else if (tabId === 'zone2') { currentZone = "Zone Public Market ชั้น 1"; document.getElementById('tab-zone2').classList.add('tab-active'); document.getElementById('formSection').classList.remove('hidden'); renderFormElements(); } 
+      else if (tabId === 'zone3') { currentZone = "Zone Lofter ชั้น 6"; document.getElementById('tab-zone3').classList.add('tab-active'); document.getElementById('formSection').classList.remove('hidden'); renderFormElements(); } 
+      else if (tabId === 'zone4') { currentZone = "% ARABICA / Starbucks / Greyhound Café"; document.getElementById('tab-zone4').classList.add('tab-active'); document.getElementById('formSection').classList.remove('hidden'); renderFormElements(); } 
+      else if (tabId === 'zone5') { currentZone = "ห้องอาหารพนักงาน"; document.getElementById('tab-zone5').classList.add('tab-active'); document.getElementById('formSection').classList.remove('hidden'); renderFormElements(); } 
+      else if (tabId === 'dashboard') { 
+        document.getElementById('tab-dashboard').classList.add('tab-active');
+        targetTabAfterLogin = 'dashboard'; 
+        if (isAdminAuthenticated) { document.getElementById('dashboardSection').classList.remove('hidden'); renderDashboard(); } else { document.getElementById('adminLoginSection').classList.remove('hidden'); } 
+      } 
+      else if (tabId === 'admin') { 
+        document.getElementById('tab-admin').classList.add('tab-active');
+        targetTabAfterLogin = 'admin'; 
+        if (isAdminAuthenticated) { 
+          if (currentUserRole === 'admin') { document.getElementById('adminSettingsSection').classList.remove('hidden'); renderAdminDashboard(); } 
+          else { showToast("User ไม่สามารถเข้าถึงหน้านี้ได้", 'error'); switchTab('dashboard'); } 
+        } else { document.getElementById('adminLoginSection').classList.remove('hidden'); } 
+      }
+    }
+
+    function toggleReasonBox(index, isFail) {
+      const box = document.getElementById(`reason_box_${index}`);
+      const input = document.getElementById(`reason_${index}`);
+      if (isFail) { box.classList.remove('hidden'); input.required = true; } else { box.classList.add('hidden'); input.required = false; input.value = ''; }
+    }
+
+    function renderFormElements() {
+      const dict = i18n[currentLang];
+      document.getElementById('txtZone').value = currentZone;
+      document.getElementById('currentZoneTitle').innerText = translateDBItem(currentZone);
+      
+      const ddlInspector = document.getElementById('ddlInspectorRole'); ddlInspector.innerHTML = `<option value="">${dict.select_role}</option>`;
+      globalData.inspectorRoles.forEach(r => { 
+          const opt = document.createElement('option'); 
+          opt.value = r; 
+          opt.innerText = translateDBItem(r); 
+          ddlInspector.appendChild(opt); 
+      });
+      
+      const ddlShop = document.getElementById('ddlShop');
+      ddlShop.innerHTML = `<option value="">${dict.select_shop}</option>`;
+      globalData.shops.filter(s => s.zone === currentZone).forEach(shop => { 
+          const opt = document.createElement('option'); 
+          opt.value = shop.name; 
+          opt.innerText = translateDBItem(shop.name); 
+          ddlShop.appendChild(opt); 
+      });
+      
+      const checklistContainer = document.getElementById('checklistContainer'); checklistContainer.innerHTML = '';
+      const zoneItems = globalData.checklist.filter(c => c.zone === currentZone);
+      if(zoneItems.length === 0) {
+        checklistContainer.innerHTML = `<p class="text-sm font-medium text-slate-400 text-center py-6 bg-white rounded-2xl border border-dashed border-slate-300">${dict.no_checklist}</p>`;
+      } else {
+        zoneItems.forEach((item, index) => {
+          const translatedItemName = translateChecklistItem(item.item);
+          checklistContainer.insertAdjacentHTML('beforeend', `
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-indigo-300 transition duration-300">
+              <p class="text-[15px] font-bold text-slate-800 mb-4 tracking-wide"><span class="text-indigo-500 mr-1">5.${index + 1}</span> ${translatedItemName}</p>
+              <div class="flex flex-wrap gap-5">
+                <label class="flex items-center space-x-2.5 cursor-pointer bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 hover:bg-emerald-50 hover:border-emerald-200 transition">
+                  <input type="radio" name="chk_${index}" value="✅ ${dict.rad_pass}" class="w-4 h-4 text-emerald-500 border-slate-300 focus:ring-emerald-500" required onchange="toggleReasonBox(${index}, false)">
+                  <span class="text-sm font-bold text-slate-700">${dict.rad_pass}</span>
+                </label>
+                <label class="flex items-center space-x-2.5 cursor-pointer bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 hover:bg-red-50 hover:border-red-200 transition">
+                  <input type="radio" name="chk_${index}" value="❌ ${dict.rad_fail}" class="w-4 h-4 text-red-500 border-slate-300 focus:ring-red-500" required onchange="toggleReasonBox(${index}, true)">
+                  <span class="text-sm font-bold text-slate-700">${dict.rad_fail}</span>
+                </label>
+                <label class="flex items-center space-x-2.5 cursor-pointer bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 hover:bg-slate-200 transition">
+                  <input type="radio" name="chk_${index}" value="➖ ${dict.rad_na}" class="w-4 h-4 text-slate-500 border-slate-300 focus:ring-slate-500" required onchange="toggleReasonBox(${index}, false)">
+                  <span class="text-sm font-bold text-slate-700">${dict.rad_na}</span>
+                </label>
+              </div>
+              <div id="reason_box_${index}" class="hidden mt-4 pt-4 border-t border-red-100">
+                <label class="block text-xs font-bold text-red-600 mb-2">${dict.reason_lbl}</label>
+                <input type="text" id="reason_${index}" placeholder="${dict.reason_ph}" class="w-full border border-red-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-red-300 bg-red-50/30">
+              </div>
+            </div>
+          `);
+        });
+      }
+    }
+
+    async function handleFormSubmit(e) {
+      e.preventDefault();
+      const zoneItems = globalData.checklist.filter(c => c.zone === currentZone); 
+      const checklistResults = [];
+      zoneItems.forEach((item, index) => {
+        const radios = document.getElementsByName(`chk_${index}`); let selectedValue = "";
+        for (let radio of radios) if (radio.checked) selectedValue = radio.value;
+        let reasonValue = selectedValue.includes("❌") ? document.getElementById(`reason_${index}`).value : "";
+        checklistResults.push({ item: item.item, status: selectedValue, reason: reasonValue });
+      });
+
+      try {
+        let fGas = document.getElementById('fileGas').files[0]; 
+        let fWater = document.getElementById('fileWater').files[0];
+        let fOverall = document.getElementById('fileOverall').files[0];
+        
+        showToast('toast_prep_img', 'info');
+        
+        const gasImgBase64 = fGas ? await compressImage(fGas) : "";
+        const waterImgBase64 = fWater ? await compressImage(fWater) : "";
+        const overallImgBase64 = fOverall ? await compressImage(fOverall) : "";
+
+        const payload = { 
+          zone: currentZone, date: document.getElementById('txtDate').value, 
+          auditor: document.getElementById('txtAuditor').value, inspectorRole: document.getElementById('ddlInspectorRole').value, 
+          shopName: document.getElementById('ddlShop').value, checklist: checklistResults, 
+          gasImg: gasImgBase64, waterImg: waterImgBase64, overallImg: overallImgBase64 
+        };
+
+        document.getElementById('safetyForm').reset(); 
+        resetAllImages();
+        const reasonBoxes = document.querySelectorAll('[id^="reason_box_"]');
+        reasonBoxes.forEach(box => box.classList.add('hidden')); 
+        const today = new Date(); if (today.getHours() < 4) today.setDate(today.getDate() - 1);
+        document.getElementById('txtDate').valueAsDate = today;
+        showToast('toast_upload_bg', 'success');
+
+        google.script.run.withSuccessHandler((res) => {
+          globalData = res.data; 
+        }).submitSafetyForm(payload);
+      } catch (err) { showToast('Error: ' + err, 'error'); }
+    }
+
+    function processLogin() {
+      const u = document.getElementById('adminUser').value;
+      const p = document.getElementById('adminPass').value; 
+      
+      // เรียกใช้ Pop-up Loading ตรงกลางแบบใหม่ พร้อมเปลี่ยนคำว่ากำลังเข้าสู่ระบบ
+      showLoading(true, 'toast_logging_in');
+      
+      google.script.run.withSuccessHandler((res) => {
+        showLoading(false); // ซ่อน Pop-up เมื่อทำงานเสร็จ
+        if(res.success) {
+          isAdminAuthenticated = true; currentUserRole = res.role; currentAdminUser = u; currentAdminPass = p; 
+          document.getElementById('loginError').classList.add('hidden');
+          const badge = document.getElementById('loggedInUserBadge'); 
+          badge.innerHTML = `👤 ${res.username} <span class="bg-indigo-600/20 text-indigo-900 border border-indigo-200 px-1.5 py-0.5 rounded text-[10px] ml-1 uppercase shadow-inner">${res.role}</span>`; 
+          badge.classList.remove('hidden'); document.getElementById('logoutBtn').classList.remove('hidden'); 
+          switchTab(targetTabAfterLogin || 'dashboard'); showToast('toast_login_succ', 'success');
+        } else { 
+          const errBox = document.getElementById('loginError'); errBox.innerText = res.message; errBox.classList.remove('hidden'); 
+        }
+      }).adminLogin(u, p);
+    }
+    
+    function togglePassword() { const pf = document.getElementById('adminPass'); pf.type = pf.type === "password" ? "text" : "password"; }
+
+    function logoutAdmin(preventRedirect = false) { 
+      isAdminAuthenticated = false;
+      currentUserRole = ""; currentAdminUser = ""; currentAdminPass = ""; 
+      document.getElementById('logoutBtn').classList.add('hidden'); document.getElementById('loggedInUserBadge').classList.add('hidden'); 
+      document.getElementById('adminUser').value = ''; document.getElementById('adminPass').value = ''; 
+      if(!preventRedirect) { switchTab('zone1'); }
+    }
+
+    function openOverrideModal(date, zone, shop, role, currentStatus) {
+      document.getElementById('overrideDateDisplay').innerText = date;
+      document.getElementById('overrideDate').value = date; 
+      document.getElementById('overrideZone').value = zone; document.getElementById('overrideShop').value = shop; 
+      document.getElementById('overrideRole').value = role;
+      const statusSelect = document.getElementById('overrideStatus');
+      if (currentStatus === 'checked') statusSelect.value = 'unchecked'; else statusSelect.value = 'checked';
+      document.getElementById('overrideModal').classList.remove('hidden');
+    }
+    
+    function closeOverrideModal() { document.getElementById('overrideModal').classList.add('hidden'); }
+    
+    function submitOverride() {
+      const dict = i18n[currentLang];
+      const u = currentAdminUser;
+      const p = currentAdminPass; const date = document.getElementById('overrideDate').value; 
+      const zone = document.getElementById('overrideZone').value; const shop = document.getElementById('overrideShop').value; 
+      const role = document.getElementById('overrideRole').value;
+      const status = document.getElementById('overrideStatus').value;
+      if(!u || !p) return showToast('toast_sess_exp', "error");
+      
+      closeOverrideModal(); showToast('toast_update_bg', "info");
+      let existingIndex = globalData.submissions.findIndex(s => s.date === date && s.zone === zone && s.shopName === shop && s.inspectorRole === role);
+      if (status === 'checked') {
+          const generatedChecklist = globalData.checklist.filter(c => c.zone === zone).map(c => ({item: c.item, status: `✅ ${dict.rad_pass}`, reason: ''}));
+          if (existingIndex > -1) { 
+            globalData.submissions[existingIndex].checklist = generatedChecklist;
+            globalData.submissions[existingIndex].auditor = "Admin Override"; 
+          } else { 
+            globalData.submissions.push({ date: date, zone: zone, shopName: shop, auditor: "Admin Override", inspectorRole: role, checklist: generatedChecklist });
+          }
+      } else if (status === 'unchecked' && existingIndex > -1) { globalData.submissions.splice(existingIndex, 1); }
+      renderDashboard(); 
+
+      google.script.run.withSuccessHandler((res) => { 
+        if(!res.success) { showToast(res.message, "error"); refreshData(); } else { showToast('toast_override_succ', 'success'); globalData = res.data; } 
+      }).adminOverrideSubmit(u, p, date, zone, shop, role, status);
+    }
+    
+    function printSection(elementId) { document.getElementById(elementId).classList.add('print-target'); window.print(); document.getElementById(elementId).classList.remove('print-target'); }
+    function downloadCSV(csv, filename) { const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); }
+    
+    function exportMatrixCSV(zoneName, role) {
+        const filterMonth = document.getElementById('filterMonth').value;
+        if(!filterMonth) return showToast('toast_sel_month', 'error');
+        const [year, month] = filterMonth.split('-'); const daysInMonth = new Date(year, month, 0).getDate();
+        const shopsInZone = globalData.shops.filter(s => s.zone === zoneName).map(s => s.name);
+        const subs = globalData.submissions.filter(s => s.zone === zoneName && s.date.startsWith(filterMonth) && s.inspectorRole === role);
+        let csv = '\uFEFFShop,';
+        for(let d=1; d<=daysInMonth; d++) csv += `${d},`; csv += `Total,% Checked\n`;
+        shopsInZone.forEach(shop => { csv += `"${shop}",`; let totalChecked = 0; for(let d=1; d<=daysInMonth; d++) { const targetDate = `${year}-${month}-${String(d).padStart(2, '0')}`; if (subs.some(s => s.shopName === shop && s.date === targetDate)) { csv += `1,`; totalChecked++; } else { csv += `0,`; } } csv += `${totalChecked},${((totalChecked/daysInMonth)*100).toFixed(0)}%\n`; });
+        downloadCSV(csv, `Matrix_${role}_${zoneName}_${filterMonth}.csv`);
+    }
+
+    function exportDetailCSV(zoneName) {
+        const filterMonth = document.getElementById('filterMonth').value;
+        const subs = globalData.submissions.filter(s => s.zone === zoneName && s.date.startsWith(filterMonth)); if(subs.length === 0) return showToast('toast_no_data', 'error');
+        let csv = '\uFEFFDate,Shop,Role,Auditor,Status\n';
+        subs.forEach(s => { let hasFail = s.checklist.some(c => c.status.includes('❌')); csv += `"${s.date}","${s.shopName}","${s.inspectorRole || '-'}","${s.auditor}","${hasFail ? 'Fail' : 'Pass'}"\n`; });
+        downloadCSV(csv, `Detail_${zoneName}_${filterMonth}.csv`);
+    }
+
+    function changePage(zoneName, delta) { tableConfig[zoneName].page += delta; renderDashboard(); }
+    function changeLimit(zoneName, newLimit) { tableConfig[zoneName].limit = parseInt(newLimit); tableConfig[zoneName].page = 1; renderDashboard(); }
+
+    function buildMatrixTable(zoneName, allSubsForZone, filterMonth, role, matrixId) {
+        const dict = i18n[currentLang];
+        if (!filterMonth) return `<p class="text-sm text-slate-500">${dict.no_data}</p>`;
+        
+        const isAdmin = (currentUserRole === 'admin');
+        const [yearStr, monthStr] = filterMonth.split('-');
+        const daysInMonth = new Date(yearStr, monthStr, 0).getDate(); const shopsInZone = globalData.shops.filter(s => s.zone === zoneName).map(s => s.name);
+        const subs = allSubsForZone.filter(s => s.inspectorRole === role); const today = new Date();
+        const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+        let html = `<div id="${matrixId}" class="mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm matrix-table">
+            <div class="bg-gradient-to-r from-slate-50 to-indigo-50/30 px-5 py-3 border-b border-slate-200 flex flex-col md:flex-row md:justify-between md:items-center gap-2">
+                <h5 class="font-bold text-indigo-900 text-sm flex items-center gap-2"><span class="text-indigo-500 bg-indigo-100 p-1.5 rounded-lg">📊</span> <span data-i18n="matrix_title">${dict.matrix_title}</span> <span class="bg-white px-2 py-1 rounded shadow-sm border border-slate-100 text-indigo-700">${translateDBItem(role)}</span></h5>
+                <div class="flex gap-2 no-print">
+                   <button onclick="exportMatrixCSV('${zoneName}', '${role}')" class="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition shadow-sm">📥 Export</button>
+                  <button onclick="printSection('${matrixId}')" class="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition shadow-sm">🖨️ Print</button>
+                </div>
+            </div>
+            <div class="overflow-x-auto print-overflow">
+                <table class="w-full text-left text-[11px] whitespace-nowrap">
+                    <thead class="bg-white text-slate-500 uppercase tracking-wider border-b border-slate-200">
+                        <tr><th class="p-2.5 font-bold sticky left-0 bg-white z-10 w-40 shadow-[1px_0_0_#e2e8f0]" data-i18n="col_shop">${dict.col_shop}</th>`;
+        for(let d=1; d<=daysInMonth; d++) html += `<th class="p-1.5 text-center border-l border-slate-100">${d}</th>`;
+        html += `<th class="p-2.5 text-center border-l border-slate-200 font-bold bg-emerald-50 text-emerald-800 shadow-[-1px_0_0_#e2e8f0]" data-i18n="col_total">${dict.col_total}</th><th class="p-2.5 text-center font-bold bg-indigo-50 text-indigo-800" data-i18n="col_percent">${dict.col_percent}</th></tr></thead><tbody class="divide-y divide-slate-100">`;
+        if(shopsInZone.length === 0) { html += `<tr><td colspan="${daysInMonth+3}" class="p-6 text-center text-slate-400 font-medium" data-i18n="no_data">${dict.no_data}</td></tr>`; } 
+        else {
+            shopsInZone.forEach(shop => {
+                const safeShop = shop.replace(/'/g, "\\'"); const safeRole = role.replace(/'/g, "\\'");
+                html += `<tr class="hover:bg-slate-50 transition group"><td class="p-2.5 sticky left-0 bg-white group-hover:bg-slate-50 shadow-[1px_0_0_#e2e8f0] font-bold text-slate-700 z-10 truncate max-w-[160px]" title="${shop}">${translateDBItem(shop)}</td>`;
+                
+                let totalChecked = 0; let passedDaysToCalculate = 0; 
+                for(let d=1; d<=daysInMonth; d++) {
+                    const targetDate = `${yearStr}-${monthStr}-${String(d).padStart(2, '0')}`;
+                    
+                    if (targetDate > todayStr) { 
+                        html += `<td class="p-1.5 text-center border-l border-slate-50"><div class="mx-auto text-slate-300 font-bold text-[14px]">-</div></td>`; 
+                    } else {
+                        const tdCheckedClass = isAdmin ? "p-1.5 text-center border-l border-slate-50 cursor-pointer hover:bg-slate-200 transition" : "p-1.5 text-center border-l border-slate-50 transition";
+                        const onClickChecked = isAdmin ? `onclick="openOverrideModal('${targetDate}', '${zoneName}', '${safeShop}', '${safeRole}', 'checked')" title="คลิกเพื่อแก้ไข"` : `title="ตรวจแล้ว"`;
+                        const tdUncheckedTodayClass = isAdmin ? "p-1.5 text-center border-l border-slate-50 cursor-pointer hover:bg-slate-100 transition" : "p-1.5 text-center border-l border-slate-50 transition";
+                        const onClickUncheckedToday = isAdmin ? `onclick="openOverrideModal('${targetDate}', '${zoneName}', '${safeShop}', '${safeRole}', 'unchecked')" title="คลิกเพื่อเพิ่มผลของวันนี้"` : `title="รอดำเนินการ"`;
+                        const tdUncheckedPastClass = isAdmin ? "p-1.5 text-center border-l border-slate-50 cursor-pointer hover:bg-red-50 transition" : "p-1.5 text-center border-l border-slate-50 transition";
+                        const onClickUncheckedPast = isAdmin ? `onclick="openOverrideModal('${targetDate}', '${zoneName}', '${safeShop}', '${safeRole}', 'unchecked')" title="คลิกเพื่อแก้ไข"` : `title="ไม่ได้ตรวจ"`;
+
+                        if (subs.some(s => s.shopName === shop && s.date === targetDate)) {
+                            passedDaysToCalculate++;
+                            totalChecked++;
+                            html += `<td class="${tdCheckedClass}" ${onClickChecked}><div class="mx-auto w-4 h-4 flex items-center justify-center bg-emerald-100 text-emerald-600 rounded-full text-[10px] font-bold shadow-sm">✓</div></td>`;
+                        } else {
+                            if (targetDate === todayStr) {
+                                html += `<td class="${tdUncheckedTodayClass}" ${onClickUncheckedToday}><div class="mx-auto text-slate-300 font-bold text-[14px]">-</div></td>`;
+                            } else {
+                                passedDaysToCalculate++;
+                                html += `<td class="${tdUncheckedPastClass}" ${onClickUncheckedPast}><div class="mx-auto text-red-400 font-bold text-[11px] bg-red-50 w-4 h-4 flex items-center justify-center rounded-full">✕</div></td>`;
+                            }
+                        }
+                    }
+                }
+                const percentage = passedDaysToCalculate === 0 ? 0 : ((totalChecked / passedDaysToCalculate) * 100).toFixed(0);
+                let pctBadge = passedDaysToCalculate === 0 ? `<span class="bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-md text-[10px]">-</span>` : (percentage == 100 ? `<span class="bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-md text-[10px]">100%</span>` : (percentage >= 50 ? `<span class="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-md text-[10px]">${percentage}%</span>` : `<span class="bg-red-100 text-red-700 px-1.5 py-0.5 rounded-md text-[10px]">${percentage}%</span>`));
+                html += `<td class="p-2.5 text-center border-l border-slate-200 font-bold text-slate-700 bg-emerald-50/30">${totalChecked}</td><td class="p-2.5 text-center font-bold bg-indigo-50/30">${pctBadge}</td></tr>`;
+            });
+        }
+        html += `</tbody></table></div></div>`; return html;
+    }
+
+    function renderDashboard() {
+      if(!isAdminAuthenticated) return;
+      const dict = i18n[currentLang];
+      const filterMonth = document.getElementById('filterMonth').value; const container = document.getElementById('dashboardTablesContainer'); container.innerHTML = '';
+      const zones = ["Zone Public Lane ชั้น 1", "Zone Public Market ชั้น 1", "Zone Lofter ชั้น 6", "% ARABICA / Starbucks / Greyhound Café", "ห้องอาหารพนักงาน"];
+      zones.forEach((zoneName, zIndex) => {
+        const subs = globalData.submissions.filter(s => s.zone === zoneName && (filterMonth ? s.date.startsWith(filterMonth) : true)); subs.sort((a,b) => new Date(b.date) - new Date(a.date));
+        let matrixSectionHtml = '';
+        if (globalData.inspectorRoles.length === 0) { matrixSectionHtml = `<p class="text-sm text-slate-400 mb-6" data-i18n="no_data">${dict.no_data}</p>`; } 
+        else { globalData.inspectorRoles.forEach((role, rIndex) => { matrixSectionHtml += buildMatrixTable(zoneName, subs, filterMonth, role, `matrix_${zIndex}_${rIndex}`); }); }
+
+        const detailId = `detail_${zIndex}`; const config = tableConfig[zoneName]; const totalItems = subs.length;
+        const totalPages = Math.ceil(totalItems / config.limit) || 1; if(config.page > totalPages) config.page = totalPages;
+        const startIndex = (config.page - 1) * config.limit; const paginatedSubs = subs.slice(startIndex, startIndex + config.limit);
+
+        let detailRows = '';
+        if(paginatedSubs.length === 0) { detailRows = `<tr><td colspan="5" class="p-8 text-center text-slate-400 font-medium bg-slate-50/50" data-i18n="no_data">${dict.no_data}</td></tr>`; } 
+        else {
+          paginatedSubs.forEach(s => {
+            let hasFail = s.checklist.some(c => c.status.includes('❌')); let overallBadge = hasFail ? `<span class="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold bg-red-50 text-red-600 border border-red-200">❌ ${dict.rad_fail}</span>` : `<span class="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">✅ ${dict.rad_pass}</span>`;
+            detailRows += `<tr class="border-b border-slate-100 hover:bg-indigo-50/30 text-sm transition group"><td class="p-3 text-slate-600 font-medium">${s.date}</td><td class="p-3 font-bold text-slate-800">${translateDBItem(s.shopName)}</td><td class="p-3 text-xs"><span class="bg-indigo-50 text-indigo-700 px-2 py-1 rounded-md border border-indigo-100">${translateDBItem(s.inspectorRole || '-')}</span></td><td class="p-3 text-slate-600 group-hover:text-indigo-700 transition">${s.auditor}</td><td class="p-3">${overallBadge}</td></tr>`;
+          });
+        }
+
+        const detailTableHtml = `
+          <div id="${detailId}" class="overflow-hidden border border-slate-200 rounded-2xl bg-white shadow-sm mt-4">
+            <div class="bg-gradient-to-r from-slate-50 to-white px-5 py-4 border-b border-slate-200 flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+              <div class="flex items-center gap-3">
+                <h5 class="font-bold text-slate-800 text-[15px] flex items-center gap-2"><span class="text-indigo-600 text-lg">📝</span> <span data-i18n="detail_title">${dict.detail_title}</span></h5>
+                <div class="no-print flex items-center gap-2 ml-2">
+                  <span class="text-xs text-slate-500 font-bold" data-i18n="show_lbl">${dict.show_lbl}</span>
+                  <select onchange="changeLimit('${zoneName}', this.value)" class="text-xs border border-slate-300 rounded-md px-2 py-1 outline-none focus:border-indigo-400 font-bold text-indigo-700 bg-white">
+                    <option value="10" ${config.limit===10?'selected':''}>10</option>
+                    <option value="20" ${config.limit===20?'selected':''}>20</option>
+                    <option value="30" ${config.limit===30?'selected':''}>30</option>
+                  </select>
+                </div>
+              </div>
+              <div class="flex gap-2 no-print">
+                <button onclick="exportDetailCSV('${zoneName}')" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition shadow-sm">📥 Export</button>
+                <button onclick="printSection('${detailId}')" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition shadow-sm">🖨️ Print</button>
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left">
+                <thead class="bg-white text-slate-500 text-xs uppercase tracking-wider font-bold border-b border-slate-200">
+                  <tr><th class="p-3 w-[15%]" data-i18n="col_date">${dict.col_date}</th><th class="p-3 w-[25%]" data-i18n="col_shop">${dict.col_shop}</th><th class="p-3 w-[20%]" data-i18n="col_type">${dict.col_type}</th><th class="p-3 w-[20%]" data-i18n="col_auditor">${dict.col_auditor}</th><th class="p-3 w-[20%]" data-i18n="col_status">${dict.col_status}</th></tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">${detailRows}</tbody>
+              </table>
+            </div>
+            <div class="no-print bg-slate-50 border-t border-slate-200 px-5 py-3 flex justify-between items-center text-sm">
+              <span class="text-slate-500 font-medium text-xs md:text-sm"><span class="font-bold text-indigo-600">${totalItems}</span></span>
+              <div class="flex space-x-2">
+                <button onclick="changePage('${zoneName}', -1)" ${config.page === 1 ? 'disabled' : ''} class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg font-bold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-sm text-xs" data-i18n="btn_prev">${dict.btn_prev}</button>
+                <button onclick="changePage('${zoneName}', 1)" ${config.page === totalPages || totalPages === 0 ? 'disabled' : ''} class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg font-bold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-sm text-xs" data-i18n="btn_next">${dict.btn_next}</button>
+              </div>
+            </div>
+          </div>`;
+        const zoneBox = document.createElement('div'); zoneBox.className = "bg-white/90 backdrop-blur-md p-6 md:p-8 rounded-[2rem] border border-white shadow-xl shadow-slate-200/50 relative overflow-hidden";
+        zoneBox.innerHTML = `<div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-indigo-500 to-blue-400 opacity-50"></div><div class="flex items-center gap-3 mb-6 ml-2"><h4 class="font-extrabold text-2xl text-slate-800 tracking-tight">${translateDBItem(zoneName)}</h4></div><div class="ml-2 relative z-10">${matrixSectionHtml}${detailTableHtml}</div>`;
+        container.appendChild(zoneBox);
+      });
+      applyLanguage(); 
+    }
+
+    function openEditTextModal(type, zone, oldVal) {
+      document.getElementById('editTextType').value = type;
+      document.getElementById('editTextZone').value = zone; document.getElementById('editTextOldVal').value = oldVal;
+      document.getElementById('editTextNewVal').value = oldVal; document.getElementById('editTextModal').classList.remove('hidden');
+    }
+    function closeEditTextModal() { document.getElementById('editTextModal').classList.add('hidden'); }
+    
+    function saveEditText() {
+      const type = document.getElementById('editTextType').value;
+      const zone = document.getElementById('editTextZone').value;
+      const oldVal = document.getElementById('editTextOldVal').value; const newVal = document.getElementById('editTextNewVal').value.trim();
+      if(!newVal || newVal === oldVal) { closeEditTextModal(); return; }
+      
+      closeEditTextModal(); showToast('toast_saving_bg', 'info');
+      if (type === 'inspectorRole') { const idx = globalData.inspectorRoles.indexOf(oldVal); if(idx > -1) globalData.inspectorRoles[idx] = newVal; } 
+      else if (type === 'shop') { const shop = globalData.shops.find(s => s.zone === zone && s.name === oldVal); if(shop) shop.name = newVal; } 
+      else if (type === 'checklist') { const chk = globalData.checklist.find(c => c.zone === zone && c.item === oldVal); if(chk) chk.item = newVal; }
+      renderFormElements(); renderDashboard(); renderAdminDashboard();
+      google.script.run.withSuccessHandler((data) => { 
+        showToast('toast_edit_succ', 'success'); globalData = data; renderFormElements(); renderDashboard(); renderAdminDashboard(); 
+      }).editConfigItem(type, zone, oldVal, newVal);
+    }
+
+    function renderAdminDashboard() {
+      if(!isAdminAuthenticated || currentUserRole !== 'admin') return;
+      const dict = i18n[currentLang];
+      
+      const listRoles = document.getElementById('listInspectorRoles'); listRoles.innerHTML = '';
+      globalData.inspectorRoles.forEach(r => {
+        const safeRole = r.replace(/'/g, "\\'"); 
+        listRoles.insertAdjacentHTML('beforeend', `<div class="flex justify-between items-center bg-white p-3 border border-slate-100 rounded-xl text-sm hover:border-indigo-300 hover:shadow-sm transition group"><span class="text-slate-700 font-bold truncate mr-2">${translateDBItem(r)}</span><div class="space-x-1 flex-shrink-0"><button onclick="openEditTextModal('inspectorRole', '', '${safeRole}')" class="text-slate-300 hover:text-amber-500 transition text-base">✏️</button><button onclick="deleteConfig('inspectorRole', '', '${safeRole}')" class="text-slate-300 hover:text-red-500 transition text-base">🗑️</button></div></div>`);
+      });
+      const tblUserRows = document.getElementById('tblUserRows'); tblUserRows.innerHTML = '';
+      globalData.users.forEach(u => {
+        const roleText = u.role === 'admin' ? dict.role_admin : dict.role_user;
+        const tr = document.createElement('tr'); tr.className = "hover:bg-slate-50 transition";
+        tr.innerHTML = `<td class="p-3 text-slate-800 font-bold">${u.username}</td><td class="p-3 text-slate-400 font-mono text-sm tracking-widest">••••••••</td><td class="p-3"><span class="${u.role === 'admin' ? 'bg-indigo-100 text-indigo-800 border-indigo-200' : 'bg-slate-100 text-slate-600 border-slate-200'} border px-3 py-1 rounded-lg text-xs uppercase font-bold tracking-wider shadow-sm">${roleText.split(':')[1] || roleText}</span></td><td class="p-3 text-center space-x-3"><button onclick="openEditModal('${u.username}', '${u.role}')" title="แก้ไข" class="text-amber-500 hover:text-amber-600 text-lg transition transform hover:scale-125">✏️</button><button onclick="deleteConfig('user', '${u.username}', '')" title="ลบ" class="text-red-500 hover:text-red-600 text-lg transition transform hover:scale-125">🗑️</button></td>`;
+        tblUserRows.appendChild(tr);
+      });
+
+      const listZone1 = document.getElementById('listShop_zone1'); const listZone2 = document.getElementById('listShop_zone2'); const listZone3 = document.getElementById('listShop_zone3');
+      const listZone4 = document.getElementById('listShop_zone4'); const listZone5 = document.getElementById('listShop_zone5');
+      listZone1.innerHTML = ''; listZone2.innerHTML = ''; listZone3.innerHTML = ''; listZone4.innerHTML = ''; listZone5.innerHTML = '';
+
+      globalData.shops.forEach(s => {
+        const safeName = s.name.replace(/'/g, "\\'"); 
+        const html = `<div class="flex justify-between items-center bg-white p-3 border border-slate-100 rounded-xl text-sm hover:border-indigo-300 hover:shadow-sm transition group"><span class="text-slate-700 font-bold truncate mr-2">${translateDBItem(s.name)}</span><div class="space-x-1 flex-shrink-0"><button onclick="openEditTextModal('shop', '${s.zone}', '${safeName}')" class="text-slate-300 hover:text-amber-500 transition text-base">✏️</button><button onclick="deleteConfig('shop', '${s.zone}', '${safeName}')" class="text-slate-300 hover:text-red-500 transition text-base">🗑️</button></div></div>`;
+        if(s.zone === "Zone Public Lane ชั้น 1") listZone1.insertAdjacentHTML('beforeend', html);
+        if(s.zone === "Zone Public Market ชั้น 1") listZone2.insertAdjacentHTML('beforeend', html);
+        if(s.zone === "Zone Lofter ชั้น 6") listZone3.insertAdjacentHTML('beforeend', html);
+        if(s.zone === "% ARABICA / Starbucks / Greyhound Café") listZone4.insertAdjacentHTML('beforeend', html);
+        if(s.zone === "ห้องอาหารพนักงาน") listZone5.insertAdjacentHTML('beforeend', html);
+      });
+
+      const checklistListContainer = document.getElementById('checklistListContainer'); checklistListContainer.innerHTML = '';
+      ["Zone Public Lane ชั้น 1", "Zone Public Market ชั้น 1", "Zone Lofter ชั้น 6", "% ARABICA / Starbucks / Greyhound Café", "ห้องอาหารพนักงาน"].forEach(zoneName => {
+        const itemsInZone = globalData.checklist.filter(c => c.zone === zoneName);
+        let itemsHtml = itemsInZone.map((c, i) => {
+          const safeItem = c.item.replace(/'/g, "\\'");
+          return `<div class="flex justify-between items-center py-2.5 border-b border-slate-100 last:border-0 group"><span class="text-sm font-bold text-slate-700 pr-2"><span class="text-indigo-500 mr-1">${i+1}.</span> ${translateChecklistItem(c.item)}</span><div class="space-x-1 flex-shrink-0"><button onclick="openEditTextModal('checklist', '${c.zone}', '${safeItem}')" class="text-slate-300 hover:text-amber-500 transition text-base">✏️</button><button onclick="deleteConfig('checklist', '${c.zone}', '${safeItem}')" class="text-slate-300 hover:text-red-500 transition text-base">🗑️</button></div></div>`;
+        }).join('');
+        const zoneBox = document.createElement('div');
+        zoneBox.className = "bg-white rounded-2xl border border-slate-200 shadow-sm p-6 hover:shadow-md transition";
+        zoneBox.innerHTML = `<span class="block font-bold text-sm text-indigo-900 mb-4 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-lg inline-block shadow-sm">${translateDBItem(zoneName)}</span><div class="space-y-1 max-h-64 overflow-y-auto pr-2 mt-2">${itemsHtml || `<p class="text-sm text-slate-400 font-medium">${dict.no_data}</p>`}</div>`;
+        checklistListContainer.appendChild(zoneBox);
+      });
+      applyLanguage();
+    }
+
+    function openEditModal(username, currentRole) {
+      document.getElementById('editModalUsername').innerText = username;
+      document.getElementById('editModalUserValue').value = username;
+      document.getElementById('editModalPass').value = ''; document.getElementById('editModalRole').value = currentRole; document.getElementById('editUserModal').classList.remove('hidden');
+    }
+    function closeEditModal() { document.getElementById('editUserModal').classList.add('hidden'); }
+    function saveEditUser() {
+      const u = document.getElementById('editModalUserValue').value; const newP = document.getElementById('editModalPass').value.trim();
+      const newRole = document.getElementById('editModalRole').value;
+      showToast('toast_saving_bg', 'info'); 
+      closeEditModal();
+      
+      const userIdx = globalData.users.findIndex(user => user.username === u);
+      if(userIdx > -1) globalData.users[userIdx].role = newRole;
+      renderAdminDashboard();
+
+      google.script.run.withSuccessHandler((data) => { showToast('toast_edit_user_succ', 'success'); globalData = data; renderAdminDashboard(); }).updateUser(u, newP, newRole);
+    }
+
+    function addShopSpecific(zone, inputId) { 
+        const value = document.getElementById(inputId).value.trim();
+        if(!value) return showToast('toast_req_shop', 'error'); 
+        
+        document.getElementById(inputId).value = ''; 
+        globalData.shops.push({zone: zone, name: value}); renderFormElements(); renderDashboard(); renderAdminDashboard();
+        showToast('toast_saving_bg', 'info');
+        google.script.run.withSuccessHandler((data) => { 
+            globalData = data; showToast('toast_add_shop_succ', 'success'); renderFormElements(); renderDashboard(); renderAdminDashboard();
+        }).addConfigItem('shop', zone, value, '');
+    }
+    function addConfig(type) {
+      if (type === 'checklist') { 
+          const zone = document.getElementById('configChecklistZone').value;
+          const value = document.getElementById('configChecklistItem').value.trim(); 
+          if(!value) return showToast('toast_req_check', 'error'); 
+          
+          document.getElementById('configChecklistItem').value = '';
+          globalData.checklist.push({zone: zone, item: value}); renderFormElements(); renderDashboard(); renderAdminDashboard();
+          showToast('toast_saving_bg', 'info');
+          google.script.run.withSuccessHandler((data) => { globalData = data; showToast('toast_add_check_succ', 'success'); renderFormElements(); renderDashboard(); renderAdminDashboard(); }).addConfigItem('checklist', zone, value, '');
+      } 
+      else if (type === 'inspectorRole') { 
+          const value = document.getElementById('newInspectorRole').value.trim();
+          if(!value) return showToast('toast_req_role', 'error'); 
+
+          document.getElementById('newInspectorRole').value = '';
+          globalData.inspectorRoles.push(value); renderFormElements(); renderDashboard(); renderAdminDashboard();
+          showToast('toast_saving_bg', 'info');
+          google.script.run.withSuccessHandler((data) => { globalData = data; showToast('toast_add_role_succ', 'success'); renderFormElements(); renderDashboard(); renderAdminDashboard(); }).addConfigItem('inspectorRole', '', value, '');
+      }
+    }
+    function addNewUser() { 
+        const u = document.getElementById('newAdminUser').value.trim();
+        const p = document.getElementById('newAdminPass').value.trim(); const role = document.getElementById('newAdminRole').value; 
+        if(!u || !p) return showToast('toast_req_userpass', 'error'); 
+        
+        document.getElementById('newAdminUser').value = '';
+        document.getElementById('newAdminPass').value = ''; 
+        globalData.users.push({username: u, role: role}); renderAdminDashboard();
+        showToast('toast_saving_bg', 'info');
+        google.script.run.withSuccessHandler((data) => { globalData = data; showToast('toast_add_user_succ', 'success'); renderAdminDashboard(); }).addConfigItem('user', u, p, role);
+    }
+    
+    let deleteTarget = { type: null, zone: null, value: null };
+    function deleteConfig(type, zone, value) { 
+        deleteTarget = { type, zone, value };
+        document.getElementById('confirmDeleteModal').classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('confirmDeleteModal').classList.add('hidden');
+        deleteTarget = { type: null, zone: null, value: null };
+    }
+
+    function executeDelete() {
+        const { type, zone, value } = deleteTarget;
+        closeDeleteModal(); 
+
+        if (type === 'inspectorRole') globalData.inspectorRoles = globalData.inspectorRoles.filter(r => r !== value);
+        else if (type === 'shop') globalData.shops = globalData.shops.filter(s => !(s.zone === zone && s.name === value));
+        else if (type === 'checklist') globalData.checklist = globalData.checklist.filter(c => !(c.zone === zone && c.item === value));
+        else if (type === 'user') globalData.users = globalData.users.filter(u => u.username !== zone); 
+        
+        renderFormElements(); renderDashboard(); renderAdminDashboard();
+        showToast('toast_del_bg', 'info');
+        google.script.run.withSuccessHandler((res) => { 
+          globalData = res; 
+          showToast('toast_del_succ', 'success'); 
+          renderFormElements(); renderDashboard(); renderAdminDashboard(); 
+        }).deleteConfigItem(type, zone, value);
+    }
+
+    function onConfigUpdated(data) { globalData = data; renderFormElements(); renderDashboard(); renderAdminDashboard(); showLoading(false); }
+  </script>
+  <div id="successModal" class="hidden fixed inset-0 bg-slate-900/60 z-[99999] flex justify-center items-center backdrop-blur-sm">
+  <div class="bg-white p-8 rounded-3xl w-full max-w-sm text-center">
+    <div class="w-20 h-20 bg-emerald-100 text-emerald-500 rounded-full flex justify-center items-center mx-auto mb-4">
+      <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+    </div>
+    <h3 class="text-2xl font-bold mb-2">บันทึกข้อมูลสำเร็จ!</h3>
+    <div class="bg-slate-50 rounded-xl p-4 text-left text-sm mb-6">
+      <p>ร้านค้า: <span id="modalShopName" class="font-bold text-indigo-600"></span></p>
+      <p>ผู้ตรวจสอบ: <span id="modalAuditor" class="font-bold"></span></p>
+    </div>
+    <button onclick="closeSuccessModal()" class="w-full bg-emerald-500 text-white rounded-xl py-3 font-bold">ตรวจรายการต่อไป</button>
+  </div>
+</div>
+</body>
+</html>
