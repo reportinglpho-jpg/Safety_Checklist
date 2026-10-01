@@ -4,38 +4,38 @@
   <meta charset="UTF-8">
   <title>Safety Checklist System</title>
   <!-- ไอคอนสำหรับมือถือ iOS (iPhone/iPad) และ Android -->
-  <link rel="apple-touch-icon" sizes="180x180" href="https://github.com/reportinglpho-jpg/Safety_Checklist/blob/main/icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="https://github.com/reportinglpho-jpg/Safety_Checklist/blob/main/icon.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="https://github.com/reportinglpho-jpg/Safety_Checklist/blob/main/icon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="https://github.com/reportinglpho-jpg/Safety_Checklist/blob/main/icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://github.com/reportinglpho-jpg/Safety_Checklist/blob/main/icon.png">
+<link rel="icon" type="image/png" sizes="16x16" href="https://github.com/reportinglpho-jpg/Safety_Checklist/blob/main/icon.png">
 
-  <!-- ตั้งชื่อแอปเวลาแสดงบนหน้าจอมือถือ -->
-  <meta name="apple-mobile-web-app-title" content="Safety App">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-capable" content="yes">
+<!-- ตั้งชื่อแอปเวลาแสดงบนหน้าจอมือถือ -->
+<meta name="apple-mobile-web-app-title" content="Safety App">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  
   <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyB5Sgw8t7BHA4OVCTZqB8EbrKNTV0K-0o8",
-      authDomain: "safety-checklist-app-692ce.firebaseapp.com",
-      databaseURL: "https://safety-checklist-app-692ce-default-rtdb.asia-southeast1.firebasedatabase.app/",
-      projectId: "safety-checklist-app-692ce",
-      storageBucket: "safety-checklist-app-692ce.firebasestorage.app",
-      messagingSenderId: "135528898952",
-      appId: "1:135528898952:web:5946c1a32f5be5a4bcda3d"
-    };
+<script>
+  // เปลี่ยนค่าด้านล่างนี้ให้เป็นของคุณที่ได้จากขั้นตอนที่ 2.2
+  const firebaseConfig = {
+    apiKey: "AIzaSyB5Sgw8t7BHA4OVCTZqB8EbrKNTV0K-0o8",
+    authDomain: "safety-checklist-app-692ce.firebaseapp.com",
+    databaseURL: "https://safety-checklist-app-692ce-default-rtdb.asia-southeast1.firebasedatabase.app/",
+    projectId: "safety-checklist-app-692ce",
+    storageBucket: "safety-checklist-app-692ce.firebasestorage.app",
+    messagingSenderId: "135528898952",
+    appId: "1:135528898952:web:5946c1a32f5be5a4bcda3d"
+  };
 
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
-    const db = firebase.database();
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzsf7p75mTPr4rtMsrdLpXxpz6_9OOWnuR_PwxT2_pW_BQJSuvjYNw7yXaCCvMqw1HsrA/exec";
-  </script>
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  const db = firebase.database();
+  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzsf7p75mTPr4rtMsrdLpXxpz6_9OOWnuR_PwxT2_pW_BQJSuvjYNw7yXaCCvMqw1HsrA/exec";
+</script>
   <style>
     body { font-family: 'Sarabun', sans-serif; background-color: #f1f5f9; }
     .bg-blobs { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; overflow: hidden; }
@@ -72,73 +72,18 @@
     </div>
   </div>
 
-  <div id="editTextModal" class="hidden fixed inset-0 bg-slate-900/40 z-[9999] flex justify-center items-center backdrop-blur-sm transition-opacity">
-    <div class="bg-white/95 backdrop-blur-md p-8 rounded-3xl w-full max-w-sm shadow-2xl border border-white/50">
-      <h3 class="font-bold text-slate-800 mb-6 text-xl flex items-center gap-2">✏️ <span data-i18n="edit_text_title">แก้ไขข้อมูล</span></h3>
-      <input type="hidden" id="editTextType">
-      <input type="hidden" id="editTextZone">
-      <input type="hidden" id="editTextOldVal">
-      <div class="space-y-4">
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1.5" data-i18n="edit_text_lbl">ระบุข้อมูลใหม่</label>
-          <input type="text" id="editTextNewVal" class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-400 outline-none bg-slate-50">
-        </div>
-      </div>
-      <div class="flex justify-end space-x-3 mt-8">
-        <button onclick="closeEditTextModal()" class="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-200" data-i18n="btn_cancel">ยกเลิก</button>
-        <button onclick="saveEditText()" class="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl text-sm font-semibold hover:shadow-lg" data-i18n="btn_save">บันทึก</button>
-      </div>
-    </div>
-  </div>
+  <div id="editTextModal" class="hidden fixed inset-0 bg-slate-900/40 z-[9999] flex justify-center items-center backdrop-blur-sm transition-opacity"><div class="bg-white/95 backdrop-blur-md p-8 rounded-3xl w-full max-w-sm shadow-2xl border border-white/50"><h3 class="font-bold text-slate-800 mb-6 text-xl flex items-center gap-2">✏️ <span data-i18n="edit_text_title">แก้ไขข้อมูล</span></h3><input type="hidden" id="editTextType"><input type="hidden" id="editTextZone"><input type="hidden" id="editTextOldVal"><div class="space-y-4"><div><label class="block text-xs font-semibold text-slate-600 mb-1.5" data-i18n="edit_text_lbl">ระบุข้อมูลใหม่</label><input type="text" id="editTextNewVal" class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-400 outline-none bg-slate-50"></div></div><div class="flex justify-end space-x-3 mt-8"><button onclick="closeEditTextModal()" class="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-200" data-i18n="btn_cancel">ยกเลิก</button><button onclick="saveEditText()" class="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl text-sm font-semibold hover:shadow-lg" data-i18n="btn_save">บันทึก</button></div></div></div>
+  <div id="editUserModal" class="hidden fixed inset-0 bg-slate-900/40 z-[9999] flex justify-center items-center backdrop-blur-sm transition-opacity"><div class="bg-white/95 backdrop-blur-md p-8 rounded-3xl w-full max-w-sm shadow-2xl border border-white/50"><h3 class="font-bold text-slate-800 mb-6 text-xl flex items-center gap-2">✏️ <span data-i18n="edit_user_title">แก้ไขบัญชี</span> <span id="editModalUsername" class="text-indigo-600"></span></h3><input type="hidden" id="editModalUserValue"><div class="space-y-4"><div><label class="block text-xs font-semibold text-slate-600 mb-1.5" data-i18n="edit_pass_lbl">รหัสผ่านใหม่</label><input type="text" id="editModalPass" class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-400 outline-none bg-slate-50" data-i18n-ph="ph_pass"></div><div><label class="block text-xs font-semibold text-slate-600 mb-1.5" data-i18n="edit_role_lbl">สิทธิ์การใช้งาน</label><select id="editModalRole" class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-400 outline-none bg-slate-50" onchange="toggleRoleCheckboxes('edit')">
+  <option value="user" data-i18n="role_user">User</option>
+  <option value="power_user">Power User</option>
+  <option value="admin" data-i18n="role_admin">Admin</option>
+</select>
 
-  <div id="editUserModal" class="hidden fixed inset-0 bg-slate-900/40 z-[9999] flex justify-center items-center backdrop-blur-sm transition-opacity">
-    <div class="bg-white/95 backdrop-blur-md p-8 rounded-3xl w-full max-w-sm shadow-2xl border border-white/50">
-      <h3 class="font-bold text-slate-800 mb-6 text-xl flex items-center gap-2">✏️ <span data-i18n="edit_user_title">แก้ไขบัญชี</span> <span id="editModalUsername" class="text-indigo-600"></span></h3>
-      <input type="hidden" id="editModalUserValue">
-      <div class="space-y-4">
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1.5" data-i18n="edit_pass_lbl">รหัสผ่านใหม่</label>
-          <input type="text" id="editModalPass" class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-400 outline-none bg-slate-50" data-i18n-ph="ph_pass">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1.5" data-i18n="edit_role_lbl">สิทธิ์การใช้งาน</label>
-          <select id="editModalRole" class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-400 outline-none bg-slate-50">
-            <option value="user" data-i18n="role_user">User</option>
-            <option value="admin" data-i18n="role_admin">Admin</option>
-          </select>
-        </div>
-      </div>
-      <div class="flex justify-end space-x-3 mt-8">
-        <button onclick="closeEditModal()" class="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-200" data-i18n="btn_cancel">ยกเลิก</button>
-        <button onclick="saveEditUser()" class="px-5 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 text-white rounded-xl text-sm font-semibold hover:shadow-lg shadow-amber-500/30" data-i18n="btn_save">บันทึก</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="overrideModal" class="hidden fixed inset-0 bg-slate-900/60 z-[9999] flex justify-center items-center backdrop-blur-sm transition-opacity">
-    <div class="bg-white/95 backdrop-blur-md p-8 rounded-3xl w-full max-w-sm shadow-2xl border border-white/50 relative overflow-hidden">
-      <div class="absolute top-0 left-0 w-full h-1.5 bg-indigo-500"></div>
-      <h3 class="font-bold text-slate-800 mb-2 text-xl flex items-center gap-2">📝 <span data-i18n="override_title">ยืนยันการแก้ไขผลตรวจ</span></h3>
-      <p class="text-xs text-slate-500 mb-5"><span data-i18n="override_desc">แก้ไขผลการตรวจย้อนหลังสำหรับวันที่</span> <span id="overrideDateDisplay" class="font-bold text-indigo-600"></span></p>
-      <input type="hidden" id="overrideDate">
-      <input type="hidden" id="overrideZone">
-      <input type="hidden" id="overrideShop">
-      <input type="hidden" id="overrideRole">
-      <div class="space-y-4">
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1.5" data-i18n="override_lbl_status">สถานะที่ต้องการแก้ไข</label>
-          <select id="overrideStatus" class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-400 outline-none bg-slate-50 font-bold">
-            <option value="checked" data-i18n="override_opt_checked">✅ ตรวจแล้ว (เพิ่มผลการตรวจ)</option>
-            <option value="unchecked" data-i18n="override_opt_unchecked">❌ ยังไม่ได้ตรวจ (ลบผลการตรวจ)</option>
-          </select>
-        </div>
-      </div>
-      <div class="flex justify-end space-x-3 mt-8">
-        <button onclick="closeOverrideModal()" class="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-200" data-i18n="btn_cancel">ยกเลิก</button>
-        <button onclick="submitOverride()" class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-bold hover:shadow-lg" data-i18n="btn_confirm">ยืนยัน</button>
-      </div>
-    </div>
-  </div>
+<div id="editViewableRolesContainer" class="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 hidden">
+  <p class="w-full text-xs font-bold text-slate-600 mb-2">สิทธิ์การดูประวัติการตรวจในแดชบอร์ด:</p>
+  <div id="editCheckboxes" class="flex flex-col gap-2"></div>
+</div><div class="flex justify-end space-x-3 mt-8"><button onclick="closeEditModal()" class="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-200" data-i18n="btn_cancel">ยกเลิก</button><button onclick="saveEditUser()" class="px-5 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 text-white rounded-xl text-sm font-semibold hover:shadow-lg shadow-amber-500/30" data-i18n="btn_save">บันทึก</button></div></div></div>
+  <div id="overrideModal" class="hidden fixed inset-0 bg-slate-900/60 z-[9999] flex justify-center items-center backdrop-blur-sm transition-opacity"><div class="bg-white/95 backdrop-blur-md p-8 rounded-3xl w-full max-w-sm shadow-2xl border border-white/50 relative overflow-hidden"><div class="absolute top-0 left-0 w-full h-1.5 bg-indigo-500"></div><h3 class="font-bold text-slate-800 mb-2 text-xl flex items-center gap-2">📝 <span data-i18n="override_title">ยืนยันการแก้ไขผลตรวจ</span></h3><p class="text-xs text-slate-500 mb-5"><span data-i18n="override_desc">แก้ไขผลการตรวจย้อนหลังสำหรับวันที่</span> <span id="overrideDateDisplay" class="font-bold text-indigo-600"></span></p><input type="hidden" id="overrideDate"><input type="hidden" id="overrideZone"><input type="hidden" id="overrideShop"><input type="hidden" id="overrideRole"><div class="space-y-4"><div><label class="block text-xs font-semibold text-slate-600 mb-1.5" data-i18n="override_lbl_status">สถานะที่ต้องการแก้ไข</label><select id="overrideStatus" class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-400 outline-none bg-slate-50 font-bold"><option value="checked" data-i18n="override_opt_checked">✅ ตรวจแล้ว (เพิ่มผลการตรวจ)</option><option value="unchecked" data-i18n="override_opt_unchecked">❌ ยังไม่ได้ตรวจ (ลบผลการตรวจ)</option></select></div></div><div class="flex justify-end space-x-3 mt-8"><button onclick="closeOverrideModal()" class="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-200" data-i18n="btn_cancel">ยกเลิก</button><button onclick="submitOverride()" class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-bold hover:shadow-lg" data-i18n="btn_confirm">ยืนยัน</button></div></div></div>
 
   <div id="confirmDeleteModal" class="hidden fixed inset-0 bg-slate-900/40 z-[9999] flex justify-center items-center backdrop-blur-sm transition-opacity">
     <div class="bg-white/95 backdrop-blur-md p-8 rounded-3xl w-full max-w-sm shadow-2xl border border-white/50">
@@ -154,21 +99,12 @@
   <header class="bg-gradient-to-r from-blue-800 via-indigo-700 to-purple-800 shadow-lg sticky top-0 z-50 no-print">
     <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
       <div class="flex items-center space-x-4">
-        <div class="p-2.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white shadow-inner">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-        </div>
-        <div>
-          <h1 class="text-xl font-extrabold text-white tracking-wide drop-shadow-md">Safety Checklist</h1>
-          <p class="text-[11px] text-indigo-200 font-medium tracking-wide mt-0.5" data-i18n="sys_subtitle">ระบบแบบตรวจสอบความปลอดภัยร้านค้า</p>
-        </div>
+        <div class="p-2.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white shadow-inner"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg></div>
+        <div><h1 class="text-xl font-extrabold text-white tracking-wide drop-shadow-md">Safety Checklist</h1><p class="text-[11px] text-indigo-200 font-medium tracking-wide mt-0.5" data-i18n="sys_subtitle">ระบบแบบตรวจสอบความปลอดภัยร้านค้า</p></div>
       </div>
       <div class="flex items-center space-x-3">
         <div class="relative">
-          <button onclick="toggleLangMenu()" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 shadow-sm px-3.5 py-1.5 rounded-full text-xs font-bold text-white transition backdrop-blur-md">
-            <svg class="w-4 h-4 text-indigo-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <span id="currentLangIcon" class="text-sm">🇹🇭</span>
-            <span id="currentLangText" class="tracking-wider">TH</span>
-          </button>
+          <button onclick="toggleLangMenu()" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 shadow-sm px-3.5 py-1.5 rounded-full text-xs font-bold text-white transition backdrop-blur-md"><svg class="w-4 h-4 text-indigo-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span id="currentLangIcon" class="text-sm">🇹🇭</span><span id="currentLangText" class="tracking-wider">TH</span></button>
           <div id="langMenu" class="dropdown-menu absolute right-0 mt-2 w-36 bg-white rounded-xl shadow-2xl border border-slate-100 py-1 z-50 overflow-hidden text-slate-700">
             <button onclick="setLang('th', '🇹🇭', 'TH')" class="w-full text-left px-4 py-2.5 text-sm font-medium hover:bg-indigo-50 hover:text-indigo-700 transition flex items-center gap-3">🇹🇭 ไทย</button>
             <button onclick="setLang('en', '🇬🇧', 'Eng')" class="w-full text-left px-4 py-2.5 text-sm font-medium hover:bg-indigo-50 hover:text-indigo-700 transition flex items-center gap-3">🇬🇧 English</button>
@@ -203,8 +139,7 @@
   <main class="max-w-7xl mx-auto px-4 py-8 relative z-10">
     <section id="formSection" class="bg-white/90 backdrop-blur-lg rounded-[2rem] shadow-2xl shadow-indigo-100/40 border border-white p-6 md:p-10 no-print max-w-4xl mx-auto">
       <div class="flex items-center gap-3 mb-8 pb-4 border-b border-slate-200/50">
-        <div class="w-1.5 h-8 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full shadow-sm"></div>
-        <h2 id="currentZoneTitle" class="text-2xl font-extrabold text-slate-800 tracking-tight">Zone Public Lane ชั้น 1</h2>
+        <div class="w-1.5 h-8 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full shadow-sm"></div><h2 id="currentZoneTitle" class="text-2xl font-extrabold text-slate-800 tracking-tight">Zone Public Lane ชั้น 1</h2>
       </div>
       <form id="safetyForm" onsubmit="handleFormSubmit(event)" class="space-y-8">
         <input type="hidden" id="txtZone" value="Zone Public Lane ชั้น 1">
@@ -274,15 +209,7 @@
     <section id="dashboardSection" class="hidden space-y-6">
       <div class="bg-white/90 backdrop-blur-lg rounded-[2rem] shadow-2xl shadow-indigo-100/30 border border-white p-6 md:p-8">
         <div class="flex flex-col md:flex-row justify-between md:items-center mb-8 gap-4 border-b border-slate-200/50 pb-5">
-          <div class="flex items-center gap-4">
-            <div class="p-3 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl text-indigo-700 shadow-inner">
-              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-            </div>
-            <div>
-              <h3 class="text-2xl font-extrabold text-slate-800" data-i18n="dashboard_title">แดชบอร์ดสรุปผล</h3>
-              <p class="text-sm text-slate-500 font-medium" data-i18n="dashboard_desc">คลิก ✕ หรือ ✓ ในตาราง เพื่อยืนยันการแก้ไขผล</p>
-            </div>
-          </div>
+          <div class="flex items-center gap-4"><div class="p-3 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl text-indigo-700 shadow-inner"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg></div><div><h3 class="text-2xl font-extrabold text-slate-800" data-i18n="dashboard_title">แดชบอร์ดสรุปผล</h3><p class="text-sm text-slate-500 font-medium" data-i18n="dashboard_desc">คลิก ✕ หรือ ✓ ในตาราง เพื่อยืนยันการแก้ไขผล</p></div></div>
           
           <div class="flex flex-wrap items-center gap-3 no-print">
             <button onclick="refreshData()" class="flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-2xl text-sm font-bold border border-indigo-200 transition shadow-sm" title="รีเฟรชข้อมูล">
@@ -294,6 +221,7 @@
               <input type="month" id="filterMonth" onchange="renderDashboard()" class="border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-400 font-bold bg-slate-50">
             </div>
           </div>
+
         </div>
         <div id="dashboardTablesContainer" class="space-y-12"></div>
       </div>
@@ -308,7 +236,28 @@
         </div>
         <div class="bg-white/80 backdrop-blur-lg rounded-[2rem] shadow-xl shadow-slate-200/50 border border-white p-8 lg:col-span-2">
           <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-200/50"><div class="p-2 bg-indigo-100 rounded-xl"><span class="text-xl">👥</span></div><h3 class="text-lg font-bold text-slate-800" data-i18n="admin_users">จัดการบัญชีผู้ใช้งาน (Users & Roles)</h3></div>
-          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm mb-6"><span class="block text-sm font-bold text-slate-800 mb-3 flex items-center gap-2"><span class="bg-indigo-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] shadow">+</span> <span data-i18n="add_user">เพิ่มบัญชีใหม่</span></span><div class="grid grid-cols-1 md:grid-cols-4 gap-3"><input type="text" id="newAdminUser" class="border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-400 bg-slate-50" data-i18n-ph="ph_user"><input type="text" id="newAdminPass" class="border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-400 bg-slate-50" data-i18n-ph="ph_pass"><select id="newAdminRole" class="border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-400 bg-slate-50 font-bold"><option value="user" data-i18n="role_user">สิทธิ์: User</option><option value="admin" data-i18n="role_admin">สิทธิ์: Admin</option></select><button onclick="addNewUser()" class="bg-slate-800 text-white px-4 py-2 rounded-xl hover:bg-slate-900 font-bold text-sm shadow-md transition" data-i18n="btn_save">บันทึก</button></div></div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm mb-6"><span class="block text-sm font-bold text-slate-800 mb-3 flex items-center gap-2"><span class="bg-indigo-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] shadow">+</span> <span data-i18n="add_user">เพิ่มบัญชีใหม่</span></span>
+            
+            <!-- ส่วนที่แก้ไขโครงสร้าง HTML ที่ผิดพลาด -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <input type="text" id="newAdminUser" class="border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-400 bg-slate-50" data-i18n-ph="ph_user">
+              <input type="text" id="newAdminPass" class="border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-400 bg-slate-50" data-i18n-ph="ph_pass">
+              <select id="newAdminRole" class="border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-400 bg-slate-50 font-bold" onchange="toggleRoleCheckboxes('new')">
+                <option value="user" data-i18n="role_user">สิทธิ์: User</option>
+                <option value="power_user">สิทธิ์: Power User</option>
+                <option value="admin" data-i18n="role_admin">สิทธิ์: Admin</option>
+              </select>
+              <button onclick="addNewUser()" class="bg-slate-800 text-white px-4 py-2 rounded-xl hover:bg-slate-900 font-bold text-sm shadow-md transition" data-i18n="btn_save">บันทึก</button>
+            
+              <!-- กล่อง Checkbox เลือกสิทธิ์การดู Dashboard -->
+              <div id="newViewableRolesContainer" class="col-span-1 md:col-span-4 flex flex-wrap gap-3 mt-2 p-3 bg-slate-50 rounded-xl border border-slate-200 hidden">
+                <p class="w-full text-xs font-bold text-slate-600 mb-1">สิทธิ์การดูประวัติการตรวจในแดชบอร์ด:</p>
+                <!-- Checkbox จะมาโผล่ตรงนี้ -->
+              </div>
+            </div>
+          </div>
+          <!-- จบส่วนที่แก้ไข -->
+
           <div class="overflow-x-auto border border-slate-200 rounded-2xl shadow-sm"><table class="w-full text-left text-sm bg-white"><thead class="bg-slate-50 text-slate-600 border-b border-slate-200"><tr><th class="p-3 font-bold" data-i18n="ph_user">Username</th><th class="p-3 font-bold" data-i18n="ph_pass">Password</th><th class="p-3 font-bold">Role</th><th class="p-3 font-bold text-center w-24" data-i18n="col_manage">จัดการ</th></tr></thead><tbody id="tblUserRows" class="divide-y divide-slate-100"></tbody></table></div>
         </div>
       </div>
@@ -554,16 +503,6 @@
     };
 
     let currentLang = 'th';
-    let globalData = { inspectorRoles: [], shops: [], checklist: [], users: [], submissions: [] };
-    let currentZone = "Zone Public Lane ชั้น 1";
-    let isAdminAuthenticated = false; 
-    let currentUserRole = ""; 
-    let targetTabAfterLogin = "";
-    let currentAdminUser = ""; let currentAdminPass = ""; 
-    let currentEditModalData = null;
-    let currentEditUserData = null;
-    let currentDeleteData = null;
-
     function showToast(messageKey, type = 'success') {
       const dict = i18n[currentLang];
       const actualMessage = dict[messageKey] || messageKey; 
@@ -584,12 +523,9 @@
 
     function toggleLangMenu() { document.getElementById('langMenu').classList.toggle('dropdown-open'); }
     function setLang(langCode, icon, text) {
-      currentLang = langCode; 
-      document.getElementById('currentLangIcon').innerText = icon;
-      document.getElementById('currentLangText').innerText = text; 
-      document.getElementById('langMenu').classList.remove('dropdown-open'); 
-      applyLanguage(); 
-      renderFormElements();
+      currentLang = langCode; document.getElementById('currentLangIcon').innerText = icon;
+      document.getElementById('currentLangText').innerText = text; document.getElementById('langMenu').classList.remove('dropdown-open'); 
+      applyLanguage(); renderFormElements();
       if (isAdminAuthenticated && !document.getElementById('dashboardSection').classList.contains('hidden')) renderDashboard();
       if (isAdminAuthenticated && !document.getElementById('adminSettingsSection').classList.contains('hidden')) renderAdminDashboard();
     }
@@ -684,17 +620,11 @@
         reader.onerror = (error) => reject(error);
     });
 
-    window.addEventListener('DOMContentLoaded', () => {
-      const today = new Date();
-      if (today.getHours() < 4) today.setDate(today.getDate() - 1); 
-      document.getElementById('txtDate').valueAsDate = today;
-
-      const now = new Date(); 
-      document.getElementById('filterMonth').value = now.toISOString().slice(0, 7);
-      applyLanguage(); 
-      refreshData();
-    });
-
+    let globalData = { inspectorRoles: [], shops: [], checklist: [], users: [], submissions: [] };
+    let currentZone = "Zone Public Lane ชั้น 1";
+    let isAdminAuthenticated = false; 
+    let currentUserRole = ""; 
+   // --- อัปเดตฟังก์ชันแสดงผล Loading ตรงกลาง ---
     function showLoading(show, messageKey = 'loading') { 
       const loader = document.getElementById('loading');
       if(show) {
@@ -709,39 +639,37 @@
     }
     
     function refreshData() { 
-      showLoading(true, 'loading');
-      db.ref('appData').once('value').then((snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          globalData = data;
-          if (!globalData.inspectorRoles) globalData.inspectorRoles = [];
-          if (!globalData.shops) globalData.shops = [];
-          if (!globalData.checklist) globalData.checklist = [];
-          if (!globalData.users) globalData.users = [];
-          if (!globalData.submissions) globalData.submissions = [];
-        }
-        
-        renderFormElements(); 
-        if(isAdminAuthenticated) { 
-          renderDashboard(); 
-          renderAdminDashboard(); 
-        } 
-        showLoading(false); 
-      }).catch((error) => {
-        console.error("Firebase fetch error:", error);
-        showLoading(false);
-      });
+  showLoading(true, 'loading');
+  
+  // ดึงข้อมูลจาก Firebase Realtime Database
+  db.ref('appData').once('value').then((snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      globalData = data;
+      // แปลงโครงสร้าง Array ถ้าไม่มีข้อมูล
+      if (!globalData.inspectorRoles) globalData.inspectorRoles = [];
+      if (!globalData.shops) globalData.shops = [];
+      if (!globalData.checklist) globalData.checklist = [];
+      if (!globalData.users) globalData.users = [];
+      if (!globalData.submissions) globalData.submissions = [];
     }
+    
+    renderFormElements(); 
+    if(isAdminAuthenticated) { 
+      renderDashboard(); 
+      renderAdminDashboard(); 
+    } 
+    showLoading(false); 
+  }).catch((error) => {
+    console.error("Firebase fetch error:", error);
+    showLoading(false);
+  });
+}
 
     function switchTab(tabId) {
-      if (tabId.startsWith('zone')) {
-        if (isAdminAuthenticated) {
-          logoutAdmin();
-        }
-      }
-
-      if (tabId === 'dashboard' || tabId === 'admin') {
-        targetTabAfterLogin = tabId;
+      if (isAdminAuthenticated) {
+        if (tabId.startsWith('zone')) { logoutAdmin(); return; }
+        if ((tabId === 'admin' && targetTabAfterLogin === 'dashboard') || (tabId === 'dashboard' && targetTabAfterLogin === 'admin')) { logoutAdmin(true); }
       }
 
       if(document.getElementById('safetyForm')) {
@@ -759,14 +687,8 @@
         document.getElementById('loginError').classList.add('hidden'); 
       }
 
-      ['tab-zone1', 'tab-zone2', 'tab-zone3', 'tab-zone4', 'tab-zone5', 'tab-dashboard', 'tab-admin'].forEach(id => { 
-        const el = document.getElementById(id);
-        if (el) el.classList.remove('tab-active'); 
-      });
-      ['formSection', 'adminLoginSection', 'dashboardSection', 'adminSettingsSection'].forEach(id => { 
-        const el = document.getElementById(id);
-        if (el) el.classList.add('hidden'); 
-      });
+      ['tab-zone1', 'tab-zone2', 'tab-zone3', 'tab-zone4', 'tab-zone5', 'tab-dashboard', 'tab-admin'].forEach(id => { document.getElementById(id).classList.remove('tab-active'); });
+      ['formSection', 'adminLoginSection', 'dashboardSection', 'adminSettingsSection'].forEach(id => { document.getElementById(id).classList.add('hidden'); });
 
       if (tabId === 'zone1') { currentZone = "Zone Public Lane ชั้น 1"; document.getElementById('tab-zone1').classList.add('tab-active'); document.getElementById('formSection').classList.remove('hidden'); renderFormElements(); } 
       else if (tabId === 'zone2') { currentZone = "Zone Public Market ชั้น 1"; document.getElementById('tab-zone2').classList.add('tab-active'); document.getElementById('formSection').classList.remove('hidden'); renderFormElements(); } 
@@ -775,10 +697,12 @@
       else if (tabId === 'zone5') { currentZone = "ห้องอาหารพนักงาน"; document.getElementById('tab-zone5').classList.add('tab-active'); document.getElementById('formSection').classList.remove('hidden'); renderFormElements(); } 
       else if (tabId === 'dashboard') { 
         document.getElementById('tab-dashboard').classList.add('tab-active');
+        targetTabAfterLogin = 'dashboard'; 
         if (isAdminAuthenticated) { document.getElementById('dashboardSection').classList.remove('hidden'); renderDashboard(); } else { document.getElementById('adminLoginSection').classList.remove('hidden'); } 
       } 
       else if (tabId === 'admin') { 
         document.getElementById('tab-admin').classList.add('tab-active');
+        targetTabAfterLogin = 'admin'; 
         if (isAdminAuthenticated) { 
           if (currentUserRole === 'admin') { document.getElementById('adminSettingsSection').classList.remove('hidden'); renderAdminDashboard(); } 
           else { showToast("User ไม่สามารถเข้าถึงหน้านี้ได้", 'error'); switchTab('dashboard'); } 
@@ -797,8 +721,7 @@
       document.getElementById('txtZone').value = currentZone;
       document.getElementById('currentZoneTitle').innerText = translateDBItem(currentZone);
       
-      const ddlInspector = document.getElementById('ddlInspectorRole'); 
-      ddlInspector.innerHTML = `<option value="">${dict.select_role}</option>`;
+      const ddlInspector = document.getElementById('ddlInspectorRole'); ddlInspector.innerHTML = `<option value="">${dict.select_role}</option>`;
       globalData.inspectorRoles.forEach(r => { 
           const opt = document.createElement('option'); 
           opt.value = r; 
@@ -886,19 +809,24 @@
         document.getElementById('txtDate').valueAsDate = today;
         showToast('toast_upload_bg', 'success');
 
+        // ---> โค้ดใหม่ที่ต้องแทนที่ <---
+        // 1. บันทึกลง Firebase เพื่อให้หน้าเว็บทำงานต่อได้ทันที
         if (!globalData.submissions) globalData.submissions = [];
         globalData.submissions.push(payload);
         db.ref('appData/submissions').set(globalData.submissions);
 
+        // 2. ส่งไปลง Google Sheets (ทำแบบ Background)
         fetch(GAS_WEB_APP_URL, {
           method: 'POST',
           mode: 'no-cors',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'submitForm', data: payload })
         }).catch(err => console.error("Sync error:", err));
+        
+        // จบส่วนที่แก้ไข
 
       } catch (err) { showToast('Error: ' + err, 'error'); }
-    }
+      } // <-- เพิ่มปีกกาปิดฟังก์ชัน handleFormSubmit ตรงนี้
 
     function processLogin() {
       const u = document.getElementById('adminUser').value;
@@ -937,8 +865,7 @@
     function openOverrideModal(date, zone, shop, role, currentStatus) {
       document.getElementById('overrideDateDisplay').innerText = date;
       document.getElementById('overrideDate').value = date; 
-      document.getElementById('overrideZone').value = zone; 
-      document.getElementById('overrideShop').value = shop; 
+      document.getElementById('overrideZone').value = zone; document.getElementById('overrideShop').value = shop; 
       document.getElementById('overrideRole').value = role;
       const statusSelect = document.getElementById('overrideStatus');
       if (currentStatus === 'checked') statusSelect.value = 'unchecked'; else statusSelect.value = 'checked';
@@ -948,411 +875,420 @@
     function closeOverrideModal() { document.getElementById('overrideModal').classList.add('hidden'); }
     
     function submitOverride() {
+      const dict = i18n[currentLang];
       const u = currentAdminUser;
-      const p = currentAdminPass; 
-      const date = document.getElementById('overrideDate').value; 
-      const zone = document.getElementById('overrideZone').value; 
-      const shop = document.getElementById('overrideShop').value; 
+      const p = currentAdminPass; const date = document.getElementById('overrideDate').value; 
+      const zone = document.getElementById('overrideZone').value; const shop = document.getElementById('overrideShop').value; 
       const role = document.getElementById('overrideRole').value;
       const status = document.getElementById('overrideStatus').value;
       if(!u || !p) return showToast('toast_sess_exp', "error");
       
-      closeOverrideModal(); 
-      showToast('toast_update_bg', "info");
-
-      if (!globalData.submissions) globalData.submissions = [];
-      
+      closeOverrideModal(); showToast('toast_update_bg', "info");
+      let existingIndex = globalData.submissions.findIndex(s => s.date === date && s.zone === zone && s.shopName === shop && s.inspectorRole === role);
       if (status === 'checked') {
-        let existing = globalData.submissions.find(s => s.date === date && s.zone === zone && s.shopName === shop);
-        if (!existing) {
-          globalData.submissions.push({
-            date: date,
-            zone: zone,
-            shopName: shop,
-            auditor: u,
-            inspectorRole: role || "Admin",
-            checklist: []
-          });
-        }
-      } else if (status === 'unchecked') {
-        globalData.submissions = globalData.submissions.filter(s => !(s.date === date && s.zone === zone && s.shopName === shop));
-      }
+          const generatedChecklist = globalData.checklist.filter(c => c.zone === zone).map(c => ({item: c.item, status: `✅ ${dict.rad_pass}`, reason: ''}));
+          if (existingIndex > -1) { 
+            globalData.submissions[existingIndex].checklist = generatedChecklist;
+            globalData.submissions[existingIndex].auditor = "Admin Override"; 
+          } else { 
+            globalData.submissions.push({ date: date, zone: zone, shopName: shop, auditor: "Admin Override", inspectorRole: role, checklist: generatedChecklist });
+          }
+      } else if (status === 'unchecked' && existingIndex > -1) { globalData.submissions.splice(existingIndex, 1); }
+      renderDashboard(); 
 
-      db.ref('appData/submissions').set(globalData.submissions).then(() => {
-        showToast('toast_override_succ', 'success');
-        renderDashboard();
-      }).catch(err => showToast('Error: ' + err.message, 'error'));
+      db.ref('appData').set(globalData);
+      showToast('toast_override_succ', 'success');
 
       fetch(GAS_WEB_APP_URL, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'overrideStatus', data: { date, zone, shop, role, status } })
+        body: JSON.stringify({ action: 'adminOverride', data: { u, p, date, zone, shop, role, status } })
       }).catch(err => console.error("Sync error:", err));
+    
+    function printSection(elementId) { document.getElementById(elementId).classList.add('print-target'); window.print(); document.getElementById(elementId).classList.remove('print-target'); }
+    function downloadCSV(csv, filename) { const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); }
+    
+    function exportMatrixCSV(zoneName, role) {
+        const filterMonth = document.getElementById('filterMonth').value;
+        if(!filterMonth) return showToast('toast_sel_month', 'error');
+        const [year, month] = filterMonth.split('-'); const daysInMonth = new Date(year, month, 0).getDate();
+        const shopsInZone = globalData.shops.filter(s => s.zone === zoneName).map(s => s.name);
+        const subs = globalData.submissions.filter(s => s.zone === zoneName && s.date.startsWith(filterMonth) && s.inspectorRole === role);
+        let csv = '\uFEFFShop,';
+        for(let d=1; d<=daysInMonth; d++) csv += `${d},`; csv += `Total,% Checked\n`;
+        shopsInZone.forEach(shop => { csv += `"${shop}",`; let totalChecked = 0; for(let d=1; d<=daysInMonth; d++) { const targetDate = `${year}-${month}-${String(d).padStart(2, '0')}`; if (subs.some(s => s.shopName === shop && s.date === targetDate)) { csv += `1,`; totalChecked++; } else { csv += `0,`; } } csv += `${totalChecked},${((totalChecked/daysInMonth)*100).toFixed(0)}%\n`; });
+        downloadCSV(csv, `Matrix_${role}_${zoneName}_${filterMonth}.csv`);
+    }
+
+    function exportDetailCSV(zoneName) {
+        const filterMonth = document.getElementById('filterMonth').value;
+        const subs = globalData.submissions.filter(s => s.zone === zoneName && s.date.startsWith(filterMonth)); if(subs.length === 0) return showToast('toast_no_data', 'error');
+        let csv = '\uFEFFDate,Shop,Role,Auditor,Status\n';
+        subs.forEach(s => { let hasFail = s.checklist.some(c => c.status.includes('❌')); csv += `"${s.date}","${s.shopName}","${s.inspectorRole || '-'}","${s.auditor}","${hasFail ? 'Fail' : 'Pass'}"\n`; });
+        downloadCSV(csv, `Detail_${zoneName}_${filterMonth}.csv`);
+    }
+
+    function changePage(zoneName, delta) { tableConfig[zoneName].page += delta; renderDashboard(); }
+    function changeLimit(zoneName, newLimit) { tableConfig[zoneName].limit = parseInt(newLimit); tableConfig[zoneName].page = 1; renderDashboard(); }
+
+    function buildMatrixTable(zoneName, allSubsForZone, filterMonth, role, matrixId) {
+        const dict = i18n[currentLang];
+        if (!filterMonth) return `<p class="text-sm text-slate-500">${dict.no_data}</p>`;
+        
+        const isAdmin = (currentUserRole === 'admin');
+        const [yearStr, monthStr] = filterMonth.split('-');
+        const daysInMonth = new Date(yearStr, monthStr, 0).getDate(); const shopsInZone = globalData.shops.filter(s => s.zone === zoneName).map(s => s.name);
+        const subs = allSubsForZone.filter(s => s.inspectorRole === role); const today = new Date();
+        const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+        let html = `<div id="${matrixId}" class="mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm matrix-table">
+            <div class="bg-gradient-to-r from-slate-50 to-indigo-50/30 px-5 py-3 border-b border-slate-200 flex flex-col md:flex-row md:justify-between md:items-center gap-2">
+                <h5 class="font-bold text-indigo-900 text-sm flex items-center gap-2"><span class="text-indigo-500 bg-indigo-100 p-1.5 rounded-lg">📊</span> <span data-i18n="matrix_title">${dict.matrix_title}</span> <span class="bg-white px-2 py-1 rounded shadow-sm border border-slate-100 text-indigo-700">${translateDBItem(role)}</span></h5>
+                <div class="flex gap-2 no-print">
+                   <button onclick="exportMatrixCSV('${zoneName}', '${role}')" class="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition shadow-sm">📥 Export</button>
+                  <button onclick="printSection('${matrixId}')" class="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition shadow-sm">🖨️ Print</button>
+                </div>
+            </div>
+            <div class="overflow-x-auto print-overflow">
+                <table class="w-full text-left text-[11px] whitespace-nowrap">
+                    <thead class="bg-white text-slate-500 uppercase tracking-wider border-b border-slate-200">
+                        <tr><th class="p-2.5 font-bold sticky left-0 bg-white z-10 w-40 shadow-[1px_0_0_#e2e8f0]" data-i18n="col_shop">${dict.col_shop}</th>`;
+        for(let d=1; d<=daysInMonth; d++) html += `<th class="p-1.5 text-center border-l border-slate-100">${d}</th>`;
+        html += `<th class="p-2.5 text-center border-l border-slate-200 font-bold bg-emerald-50 text-emerald-800 shadow-[-1px_0_0_#e2e8f0]" data-i18n="col_total">${dict.col_total}</th><th class="p-2.5 text-center font-bold bg-indigo-50 text-indigo-800" data-i18n="col_percent">${dict.col_percent}</th></tr></thead><tbody class="divide-y divide-slate-100">`;
+        if(shopsInZone.length === 0) { html += `<tr><td colspan="${daysInMonth+3}" class="p-6 text-center text-slate-400 font-medium" data-i18n="no_data">${dict.no_data}</td></tr>`; } 
+        else {
+            shopsInZone.forEach(shop => {
+                const safeShop = shop.replace(/'/g, "\\'"); const safeRole = role.replace(/'/g, "\\'");
+                html += `<tr class="hover:bg-slate-50 transition group"><td class="p-2.5 sticky left-0 bg-white group-hover:bg-slate-50 shadow-[1px_0_0_#e2e8f0] font-bold text-slate-700 z-10 truncate max-w-[160px]" title="${shop}">${translateDBItem(shop)}</td>`;
+                
+                let totalChecked = 0; let passedDaysToCalculate = 0; 
+                for(let d=1; d<=daysInMonth; d++) {
+                    const targetDate = `${yearStr}-${monthStr}-${String(d).padStart(2, '0')}`;
+                    
+                    if (targetDate > todayStr) { 
+                        html += `<td class="p-1.5 text-center border-l border-slate-50"><div class="mx-auto text-slate-300 font-bold text-[14px]">-</div></td>`; 
+                    } else {
+                        const tdCheckedClass = isAdmin ? "p-1.5 text-center border-l border-slate-50 cursor-pointer hover:bg-slate-200 transition" : "p-1.5 text-center border-l border-slate-50 transition";
+                        const onClickChecked = isAdmin ? `onclick="openOverrideModal('${targetDate}', '${zoneName}', '${safeShop}', '${safeRole}', 'checked')" title="คลิกเพื่อแก้ไข"` : `title="ตรวจแล้ว"`;
+                        const tdUncheckedTodayClass = isAdmin ? "p-1.5 text-center border-l border-slate-50 cursor-pointer hover:bg-slate-100 transition" : "p-1.5 text-center border-l border-slate-50 transition";
+                        const onClickUncheckedToday = isAdmin ? `onclick="openOverrideModal('${targetDate}', '${zoneName}', '${safeShop}', '${safeRole}', 'unchecked')" title="คลิกเพื่อเพิ่มผลของวันนี้"` : `title="รอดำเนินการ"`;
+                        const tdUncheckedPastClass = isAdmin ? "p-1.5 text-center border-l border-slate-50 cursor-pointer hover:bg-red-50 transition" : "p-1.5 text-center border-l border-slate-50 transition";
+                        const onClickUncheckedPast = isAdmin ? `onclick="openOverrideModal('${targetDate}', '${zoneName}', '${safeShop}', '${safeRole}', 'unchecked')" title="คลิกเพื่อแก้ไข"` : `title="ไม่ได้ตรวจ"`;
+
+                        if (subs.some(s => s.shopName === shop && s.date === targetDate)) {
+                            passedDaysToCalculate++;
+                            totalChecked++;
+                            html += `<td class="${tdCheckedClass}" ${onClickChecked}><div class="mx-auto w-4 h-4 flex items-center justify-center bg-emerald-100 text-emerald-600 rounded-full text-[10px] font-bold shadow-sm">✓</div></td>`;
+                        } else {
+                            if (targetDate === todayStr) {
+                                html += `<td class="${tdUncheckedTodayClass}" ${onClickUncheckedToday}><div class="mx-auto text-slate-300 font-bold text-[14px]">-</div></td>`;
+                            } else {
+                                passedDaysToCalculate++;
+                                html += `<td class="${tdUncheckedPastClass}" ${onClickUncheckedPast}><div class="mx-auto text-red-400 font-bold text-[11px] bg-red-50 w-4 h-4 flex items-center justify-center rounded-full">✕</div></td>`;
+                            }
+                        }
+                    }
+                }
+                const percentage = passedDaysToCalculate === 0 ? 0 : ((totalChecked / passedDaysToCalculate) * 100).toFixed(0);
+                let pctBadge = passedDaysToCalculate === 0 ? `<span class="bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-md text-[10px]">-</span>` : (percentage == 100 ? `<span class="bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-md text-[10px]">100%</span>` : (percentage >= 50 ? `<span class="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-md text-[10px]">${percentage}%</span>` : `<span class="bg-red-100 text-red-700 px-1.5 py-0.5 rounded-md text-[10px]">${percentage}%</span>`));
+                html += `<td class="p-2.5 text-center border-l border-slate-200 font-bold text-slate-700 bg-emerald-50/30">${totalChecked}</td><td class="p-2.5 text-center font-bold bg-indigo-50/30">${pctBadge}</td></tr>`;
+            });
+        }
+        html += `</tbody></table></div></div>`; return html;
     }
 
     function renderDashboard() {
-      const container = document.getElementById('dashboardTablesContainer');
-      if (!container) return;
-      container.innerHTML = '';
-
-      const filterMonth = document.getElementById('filterMonth').value; 
-      if (!filterMonth) return;
-
-      const [yearStr, monthStr] = filterMonth.split('-');
-      const year = parseInt(yearStr, 10);
-      const month = parseInt(monthStr, 10);
-      const daysInMonth = new Date(year, month, 0).getDate();
-
-      const zones = [
-        "Zone Public Lane ชั้น 1",
-        "Zone Public Market ชั้น 1",
-        "Zone Lofter ชั้น 6",
-        "% ARABICA / Starbucks / Greyhound Café",
-        "ห้องอาหารพนักงาน"
-      ];
-
+      if(!isAdminAuthenticated) return;
       const dict = i18n[currentLang];
+      const filterMonth = document.getElementById('filterMonth').value; const container = document.getElementById('dashboardTablesContainer'); container.innerHTML = '';
+      const zones = ["Zone Public Lane ชั้น 1", "Zone Public Market ชั้น 1", "Zone Lofter ชั้น 6", "% ARABICA / Starbucks / Greyhound Café", "ห้องอาหารพนักงาน"];
+      zones.forEach((zoneName, zIndex) => {
+        const subs = globalData.submissions.filter(s => s.zone === zoneName && (filterMonth ? s.date.startsWith(filterMonth) : true)); subs.sort((a,b) => new Date(b.date) - new Date(a.date));
+        let matrixSectionHtml = '';
+        if (globalData.inspectorRoles.length === 0) { matrixSectionHtml = `<p class="text-sm text-slate-400 mb-6" data-i18n="no_data">${dict.no_data}</p>`; } 
+        else { globalData.inspectorRoles.forEach((role, rIndex) => { matrixSectionHtml += buildMatrixTable(zoneName, subs, filterMonth, role, `matrix_${zIndex}_${rIndex}`); }); }
 
-      zones.forEach(zone => {
-        const zoneShops = (globalData.shops || []).filter(s => s.zone === zone);
-        const zoneSubmissions = (globalData.submissions || []).filter(s => s.zone === zone && s.date && s.date.startsWith(filterMonth));
+        const detailId = `detail_${zIndex}`; const config = tableConfig[zoneName]; const totalItems = subs.length;
+        const totalPages = Math.ceil(totalItems / config.limit) || 1; if(config.page > totalPages) config.page = totalPages;
+        const startIndex = (config.page - 1) * config.limit; const paginatedSubs = subs.slice(startIndex, startIndex + config.limit);
 
-        let html = `
-          <div class="bg-white rounded-3xl border border-slate-200 shadow-md p-6 space-y-4">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-100 pb-4 gap-2">
-              <h4 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                <span class="w-3 h-3 rounded-full bg-indigo-600"></span>
-                ${translateDBItem(zone)}
-              </h4>
-              <span class="text-xs text-slate-500 font-semibold">${dict.matrix_title} ${translateDBItem(zone)} (${filterMonth})</span>
+        let detailRows = '';
+        if(paginatedSubs.length === 0) { detailRows = `<tr><td colspan="5" class="p-8 text-center text-slate-400 font-medium bg-slate-50/50" data-i18n="no_data">${dict.no_data}</td></tr>`; } 
+        else {
+          paginatedSubs.forEach(s => {
+            let hasFail = s.checklist.some(c => c.status.includes('❌')); let overallBadge = hasFail ? `<span class="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold bg-red-50 text-red-600 border border-red-200">❌ ${dict.rad_fail}</span>` : `<span class="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">✅ ${dict.rad_pass}</span>`;
+            detailRows += `<tr class="border-b border-slate-100 hover:bg-indigo-50/30 text-sm transition group"><td class="p-3 text-slate-600 font-medium">${s.date}</td><td class="p-3 font-bold text-slate-800">${translateDBItem(s.shopName)}</td><td class="p-3 text-xs"><span class="bg-indigo-50 text-indigo-700 px-2 py-1 rounded-md border border-indigo-100">${translateDBItem(s.inspectorRole || '-')}</span></td><td class="p-3 text-slate-600 group-hover:text-indigo-700 transition">${s.auditor}</td><td class="p-3">${overallBadge}</td></tr>`;
+          });
+        }
+
+        const detailTableHtml = `
+          <div id="${detailId}" class="overflow-hidden border border-slate-200 rounded-2xl bg-white shadow-sm mt-4">
+            <div class="bg-gradient-to-r from-slate-50 to-white px-5 py-4 border-b border-slate-200 flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+              <div class="flex items-center gap-3">
+                <h5 class="font-bold text-slate-800 text-[15px] flex items-center gap-2"><span class="text-indigo-600 text-lg">📝</span> <span data-i18n="detail_title">${dict.detail_title}</span></h5>
+                <div class="no-print flex items-center gap-2 ml-2">
+                  <span class="text-xs text-slate-500 font-bold" data-i18n="show_lbl">${dict.show_lbl}</span>
+                  <select onchange="changeLimit('${zoneName}', this.value)" class="text-xs border border-slate-300 rounded-md px-2 py-1 outline-none focus:border-indigo-400 font-bold text-indigo-700 bg-white">
+                    <option value="10" ${config.limit===10?'selected':''}>10</option>
+                    <option value="20" ${config.limit===20?'selected':''}>20</option>
+                    <option value="30" ${config.limit===30?'selected':''}>30</option>
+                  </select>
+                </div>
+              </div>
+              <div class="flex gap-2 no-print">
+                <button onclick="exportDetailCSV('${zoneName}')" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition shadow-sm">📥 Export</button>
+                <button onclick="printSection('${detailId}')" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition shadow-sm">🖨️ Print</button>
+              </div>
             </div>
             <div class="overflow-x-auto">
-              <table class="w-full text-center text-xs matrix-table border-collapse">
-                <thead>
-                  <tr class="bg-slate-100 text-slate-700">
-                    <th class="p-2 border border-slate-200 text-left min-w-[140px] font-bold">${dict.col_shop}</th>
-                    <th class="p-2 border border-slate-200 font-bold">${dict.col_total}</th>
-                    <th class="p-2 border border-slate-200 font-bold">${dict.col_percent}</th>
-        `;
-
-        for (let d = 1; d <= daysInMonth; d++) {
-          html += `<th class="p-1 border border-slate-200 font-bold min-w-[28px]">${d}</th>`;
-        }
-        html += `</tr></thead><tbody>`;
-
-        if (zoneShops.length === 0) {
-          html += `<tr><td colspan="${3 + daysInMonth}" class="p-4 text-slate-400 text-center">${dict.no_data}</td></tr>`;
-        } else {
-          zoneShops.forEach(shop => {
-            const shopSubs = zoneSubmissions.filter(s => s.shopName === shop.name);
-            const checkedDates = new Set(shopSubs.map(s => s.date));
-            const checkedCount = checkedDates.size;
-            const percent = Math.round((checkedCount / daysInMonth) * 100);
-
-            html += `<tr class="hover:bg-slate-50 transition">
-              <td class="p-2 border border-slate-200 text-left font-bold text-slate-800">${translateDBItem(shop.name)}</td>
-              <td class="p-2 border border-slate-200 font-semibold text-indigo-700">${checkedCount}/${daysInMonth}</td>
-              <td class="p-2 border border-slate-200 font-extrabold ${percent >= 80 ? 'text-emerald-600' : 'text-amber-600'}">${percent}%</td>
-            `;
-
-            for (let d = 1; d <= daysInMonth; d++) {
-              const dayStr = String(d).padStart(2, '0');
-              const fullDate = `${filterMonth}-${dayStr}`;
-              const isChecked = checkedDates.has(fullDate);
-              
-              if (isChecked) {
-                html += `<td class="p-1 border border-slate-200 bg-emerald-50 text-emerald-600 font-bold cursor-pointer hover:bg-emerald-100" onclick="openOverrideModal('${fullDate}', '${zone.replace(/'/g, "\\'")}', '${shop.name.replace(/'/g, "\\'")}', '', 'checked')">✓</td>`;
-              } else {
-                html += `<td class="p-1 border border-slate-200 bg-red-50 text-red-400 font-bold cursor-pointer hover:bg-red-100" onclick="openOverrideModal('${fullDate}', '${zone.replace(/'/g, "\\'")}', '${shop.name.replace(/'/g, "\\'")}', '', 'unchecked')">✕</td>`;
-              }
-            }
-            html += `</tr>`;
-          });
-        }
-
-        html += `</tbody></table></div></div>`;
-        container.insertAdjacentHTML('beforeend', html);
-      });
-    }
-
-    function renderAdminDashboard() {
-      const dict = i18n[currentLang];
-
-      const listRolesEl = document.getElementById('listInspectorRoles');
-      if (listRolesEl) {
-        listRolesEl.innerHTML = '';
-        (globalData.inspectorRoles || []).forEach((role) => {
-          listRolesEl.insertAdjacentHTML('beforeend', `
-            <div class="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-              <span class="text-sm font-bold text-slate-700">${translateDBItem(role)}</span>
-              <div class="flex gap-1">
-                <button onclick="openEditTextModal('inspectorRole', '', '${role.replace(/'/g, "\\'")}')" class="text-xs bg-amber-100 text-amber-700 hover:bg-amber-200 px-2 py-1 rounded-lg font-bold">✏️</button>
-                <button onclick="confirmDelete('inspectorRole', '', '${role.replace(/'/g, "\\'")}')" class="text-xs bg-red-100 text-red-600 hover:bg-red-200 px-2 py-1 rounded-lg font-bold">🗑️</button>
+              <table class="w-full text-left">
+                <thead class="bg-white text-slate-500 text-xs uppercase tracking-wider font-bold border-b border-slate-200">
+                  <tr><th class="p-3 w-[15%]" data-i18n="col_date">${dict.col_date}</th><th class="p-3 w-[25%]" data-i18n="col_shop">${dict.col_shop}</th><th class="p-3 w-[20%]" data-i18n="col_type">${dict.col_type}</th><th class="p-3 w-[20%]" data-i18n="col_auditor">${dict.col_auditor}</th><th class="p-3 w-[20%]" data-i18n="col_status">${dict.col_status}</th></tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">${detailRows}</tbody>
+              </table>
+            </div>
+            <div class="no-print bg-slate-50 border-t border-slate-200 px-5 py-3 flex justify-between items-center text-sm">
+              <span class="text-slate-500 font-medium text-xs md:text-sm"><span class="font-bold text-indigo-600">${totalItems}</span></span>
+              <div class="flex space-x-2">
+                <button onclick="changePage('${zoneName}', -1)" ${config.page === 1 ? 'disabled' : ''} class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg font-bold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-sm text-xs" data-i18n="btn_prev">${dict.btn_prev}</button>
+                <button onclick="changePage('${zoneName}', 1)" ${config.page === totalPages || totalPages === 0 ? 'disabled' : ''} class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg font-bold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-sm text-xs" data-i18n="btn_next">${dict.btn_next}</button>
               </div>
             </div>
-          `);
-        });
-      }
-
-      const tblUserRows = document.getElementById('tblUserRows');
-      if (tblUserRows) {
-        tblUserRows.innerHTML = '';
-        (globalData.users || []).forEach((user) => {
-          tblUserRows.insertAdjacentHTML('beforeend', `
-            <tr class="hover:bg-slate-50 border-b border-slate-100">
-              <td class="p-3 font-bold text-slate-800">${user.username}</td>
-              <td class="p-3 font-mono text-slate-500">••••••</td>
-              <td class="p-3 font-bold ${user.role === 'admin' ? 'text-indigo-600' : 'text-slate-600'}">${user.role}</td>
-              <td class="p-3 text-center">
-                <div class="flex justify-center gap-1">
-                  <button onclick="openEditUserModal('${user.username.replace(/'/g, "\\'")}', '${user.role}')" class="text-xs bg-amber-100 text-amber-700 hover:bg-amber-200 px-2.5 py-1 rounded-lg font-bold">✏️</button>
-                  <button onclick="confirmDelete('user', '', '${user.username.replace(/'/g, "\\'")}')" class="text-xs bg-red-100 text-red-600 hover:bg-red-200 px-2.5 py-1 rounded-lg font-bold">🗑️</button>
-                </div>
-              </td>
-            </tr>
-          `);
-        });
-      }
-
-      const zoneMap = {
-        'zone1': 'Zone Public Lane ชั้น 1',
-        'zone2': 'Zone Public Market ชั้น 1',
-        'zone3': 'Zone Lofter ชั้น 6',
-        'zone4': '% ARABICA / Starbucks / Greyhound Café',
-        'zone5': 'ห้องอาหารพนักงาน'
-      };
-
-      Object.keys(zoneMap).forEach(key => {
-        const listEl = document.getElementById(`listShop_${key}`);
-        const zoneName = zoneMap[key];
-        if (listEl) {
-          listEl.innerHTML = '';
-          const shops = (globalData.shops || []).filter(s => s.zone === zoneName);
-          shops.forEach(shop => {
-            listEl.insertAdjacentHTML('beforeend', `
-              <div class="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-200 mb-1.5">
-                <span class="text-xs font-bold text-slate-700">${translateDBItem(shop.name)}</span>
-                <div class="flex gap-1">
-                  <button onclick="openEditTextModal('shop', '${zoneName.replace(/'/g, "\\'")}', '${shop.name.replace(/'/g, "\\'")}')" class="text-xs bg-amber-100 text-amber-700 hover:bg-amber-200 px-2 py-1 rounded-lg font-bold">✏️</button>
-                  <button onclick="confirmDelete('shop', '${zoneName.replace(/'/g, "\\'")}', '${shop.name.replace(/'/g, "\\'")}')" class="text-xs bg-red-100 text-red-600 hover:bg-red-200 px-2 py-1 rounded-lg font-bold">🗑️</button>
-                </div>
-              </div>
-            `);
-          });
-        }
+          </div>`;
+        const zoneBox = document.createElement('div'); zoneBox.className = "bg-white/90 backdrop-blur-md p-6 md:p-8 rounded-[2rem] border border-white shadow-xl shadow-slate-200/50 relative overflow-hidden";
+        zoneBox.innerHTML = `<div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-indigo-500 to-blue-400 opacity-50"></div><div class="flex items-center gap-3 mb-6 ml-2"><h4 class="font-extrabold text-2xl text-slate-800 tracking-tight">${translateDBItem(zoneName)}</h4></div><div class="ml-2 relative z-10">${matrixSectionHtml}${detailTableHtml}</div>`;
+        container.appendChild(zoneBox);
       });
-
-      const checklistContainer = document.getElementById('checklistListContainer');
-      if (checklistContainer) {
-        checklistContainer.innerHTML = '';
-        const zonesList = Object.values(zoneMap);
-        zonesList.forEach(zoneName => {
-          const items = (globalData.checklist || []).filter(c => c.zone === zoneName);
-          let html = `
-            <div class="bg-slate-50/70 p-5 rounded-2xl border border-slate-200 space-y-3">
-              <h4 class="font-bold text-sm text-indigo-900 border-b border-slate-200 pb-2">${translateDBItem(zoneName)}</h4>
-              <div class="space-y-2 max-h-60 overflow-y-auto pr-1">
-          `;
-          if (items.length === 0) {
-            html += `<p class="text-xs text-slate-400 italic">${dict.no_checklist}</p>`;
-          } else {
-            items.forEach((c, idx) => {
-              html += `
-                <div class="flex items-center justify-between bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
-                  <span class="text-xs font-medium text-slate-800"><b class="text-indigo-600">${idx + 1}.</b> ${translateChecklistItem(c.item)}</span>
-                  <div class="flex gap-1 ml-2 shrink-0">
-                    <button onclick="openEditTextModal('checklist', '${zoneName.replace(/'/g, "\\'")}', '${c.item.replace(/'/g, "\\'")}')" class="text-xs bg-amber-100 text-amber-700 hover:bg-amber-200 px-2 py-1 rounded-lg font-bold">✏️</button>
-                    <button onclick="confirmDelete('checklist', '${zoneName.replace(/'/g, "\\'")}', '${c.item.replace(/'/g, "\\'")}')" class="text-xs bg-red-100 text-red-600 hover:bg-red-200 px-2 py-1 rounded-lg font-bold">🗑️</button>
-                  </div>
-                </div>
-              `;
-            });
-          }
-          html += `</div></div>`;
-          checklistContainer.insertAdjacentHTML('beforeend', html);
-        });
-      }
+      applyLanguage(); 
     }
 
     function openEditTextModal(type, zone, oldVal) {
-      currentEditModalData = { type, zone, oldVal };
       document.getElementById('editTextType').value = type;
-      document.getElementById('editTextZone').value = zone;
-      document.getElementById('editTextOldVal').value = oldVal;
-      document.getElementById('editTextNewVal').value = oldVal;
-      document.getElementById('editTextModal').classList.remove('hidden');
+      document.getElementById('editTextZone').value = zone; document.getElementById('editTextOldVal').value = oldVal;
+      document.getElementById('editTextNewVal').value = oldVal; document.getElementById('editTextModal').classList.remove('hidden');
     }
-
-    function closeEditTextModal() {
-      document.getElementById('editTextModal').classList.add('hidden');
-      currentEditModalData = null;
-    }
-
+    function closeEditTextModal() { document.getElementById('editTextModal').classList.add('hidden'); }
+    
     function saveEditText() {
-      if (!currentEditModalData) return;
-      const { type, zone, oldVal } = currentEditModalData;
-      const newVal = document.getElementById('editTextNewVal').value.trim();
-      if (!newVal) return;
+  const type = document.getElementById('editTextType').value;
+  const zone = document.getElementById('editTextZone').value;
+  const oldVal = document.getElementById('editTextOldVal').value; 
+  const newVal = document.getElementById('editTextNewVal').value.trim();
+  
+  if(!newVal || newVal === oldVal) { closeEditTextModal(); return; }
+  
+  closeEditTextModal(); 
+  showToast('toast_saving_bg', 'info');
+  
+  if (type === 'inspectorRole') { const idx = globalData.inspectorRoles.indexOf(oldVal); if(idx > -1) globalData.inspectorRoles[idx] = newVal; } 
+  else if (type === 'shop') { const shop = globalData.shops.find(s => s.zone === zone && s.name === oldVal); if(shop) shop.name = newVal; } 
+  else if (type === 'checklist') { const chk = globalData.checklist.find(c => c.zone === zone && c.item === oldVal); if(chk) chk.item = newVal; }
+  
+  renderFormElements(); renderDashboard(); renderAdminDashboard();
 
-      showToast('toast_saving_bg', 'info');
+  // เซฟลง Firebase
+  db.ref('appData').set(globalData);
+  showToast('toast_edit_succ', 'success');
+}
 
-      if (type === 'inspectorRole') {
-        const idx = (globalData.inspectorRoles || []).indexOf(oldVal);
-        if (idx !== -1) globalData.inspectorRoles[idx] = newVal;
-        db.ref('appData/inspectorRoles').set(globalData.inspectorRoles);
-      } else if (type === 'shop') {
-        const shop = (globalData.shops || []).find(s => s.zone === zone && s.name === oldVal);
-        if (shop) shop.name = newVal;
-        db.ref('appData/shops').set(globalData.shops);
-      } else if (type === 'checklist') {
-        const chk = (globalData.checklist || []).find(c => c.zone === zone && c.item === oldVal);
-        if (chk) chk.item = newVal;
-        db.ref('appData/checklist').set(globalData.checklist);
+    function renderAdminDashboard() {
+      if(!isAdminAuthenticated || currentUserRole !== 'admin') return;
+      const dict = i18n[currentLang];
+      
+      const listRoles = document.getElementById('listInspectorRoles'); listRoles.innerHTML = '';
+      globalData.inspectorRoles.forEach(r => {
+        const safeRole = r.replace(/'/g, "\\'"); 
+        listRoles.insertAdjacentHTML('beforeend', `<div class="flex justify-between items-center bg-white p-3 border border-slate-100 rounded-xl text-sm hover:border-indigo-300 hover:shadow-sm transition group"><span class="text-slate-700 font-bold truncate mr-2">${translateDBItem(r)}</span><div class="space-x-1 flex-shrink-0"><button onclick="openEditTextModal('inspectorRole', '', '${safeRole}')" class="text-slate-300 hover:text-amber-500 transition text-base">✏️</button><button onclick="deleteConfig('inspectorRole', '', '${safeRole}')" class="text-slate-300 hover:text-red-500 transition text-base">🗑️</button></div></div>`);
+      });
+      const tblUserRows = document.getElementById('tblUserRows'); tblUserRows.innerHTML = '';
+      globalData.users.forEach(u => {
+        const roleText = u.role === 'admin' ? dict.role_admin : dict.role_user;
+        const tr = document.createElement('tr'); tr.className = "hover:bg-slate-50 transition";
+        tr.innerHTML = `<td class="p-3 text-slate-800 font-bold">${u.username}</td><td class="p-3 text-slate-400 font-mono text-sm tracking-widest">••••••••</td><td class="p-3"><span class="${u.role === 'admin' ? 'bg-indigo-100 text-indigo-800 border-indigo-200' : 'bg-slate-100 text-slate-600 border-slate-200'} border px-3 py-1 rounded-lg text-xs uppercase font-bold tracking-wider shadow-sm">${roleText.split(':')[1] || roleText}</span></td><td class="p-3 text-center space-x-3"><button onclick="openEditModal('${u.username}', '${u.role}')" title="แก้ไข" class="text-amber-500 hover:text-amber-600 text-lg transition transform hover:scale-125">✏️</button><button onclick="deleteConfig('user', '${u.username}', '')" title="ลบ" class="text-red-500 hover:text-red-600 text-lg transition transform hover:scale-125">🗑️</button></td>`;
+        tblUserRows.appendChild(tr);
+      });
+
+      const listZone1 = document.getElementById('listShop_zone1'); const listZone2 = document.getElementById('listShop_zone2'); const listZone3 = document.getElementById('listShop_zone3');
+      const listZone4 = document.getElementById('listShop_zone4'); const listZone5 = document.getElementById('listShop_zone5');
+      listZone1.innerHTML = ''; listZone2.innerHTML = ''; listZone3.innerHTML = ''; listZone4.innerHTML = ''; listZone5.innerHTML = '';
+
+      globalData.shops.forEach(s => {
+        const safeName = s.name.replace(/'/g, "\\'"); 
+        const html = `<div class="flex justify-between items-center bg-white p-3 border border-slate-100 rounded-xl text-sm hover:border-indigo-300 hover:shadow-sm transition group"><span class="text-slate-700 font-bold truncate mr-2">${translateDBItem(s.name)}</span><div class="space-x-1 flex-shrink-0"><button onclick="openEditTextModal('shop', '${s.zone}', '${safeName}')" class="text-slate-300 hover:text-amber-500 transition text-base">✏️</button><button onclick="deleteConfig('shop', '${s.zone}', '${safeName}')" class="text-slate-300 hover:text-red-500 transition text-base">🗑️</button></div></div>`;
+        if(s.zone === "Zone Public Lane ชั้น 1") listZone1.insertAdjacentHTML('beforeend', html);
+        if(s.zone === "Zone Public Market ชั้น 1") listZone2.insertAdjacentHTML('beforeend', html);
+        if(s.zone === "Zone Lofter ชั้น 6") listZone3.insertAdjacentHTML('beforeend', html);
+        if(s.zone === "% ARABICA / Starbucks / Greyhound Café") listZone4.insertAdjacentHTML('beforeend', html);
+        if(s.zone === "ห้องอาหารพนักงาน") listZone5.insertAdjacentHTML('beforeend', html);
+      });
+
+      const checklistListContainer = document.getElementById('checklistListContainer'); checklistListContainer.innerHTML = '';
+      ["Zone Public Lane ชั้น 1", "Zone Public Market ชั้น 1", "Zone Lofter ชั้น 6", "% ARABICA / Starbucks / Greyhound Café", "ห้องอาหารพนักงาน"].forEach(zoneName => {
+        const itemsInZone = globalData.checklist.filter(c => c.zone === zoneName);
+        let itemsHtml = itemsInZone.map((c, i) => {
+          const safeItem = c.item.replace(/'/g, "\\'");
+          return `<div class="flex justify-between items-center py-2.5 border-b border-slate-100 last:border-0 group"><span class="text-sm font-bold text-slate-700 pr-2"><span class="text-indigo-500 mr-1">${i+1}.</span> ${translateChecklistItem(c.item)}</span><div class="space-x-1 flex-shrink-0"><button onclick="openEditTextModal('checklist', '${c.zone}', '${safeItem}')" class="text-slate-300 hover:text-amber-500 transition text-base">✏️</button><button onclick="deleteConfig('checklist', '${c.zone}', '${safeItem}')" class="text-slate-300 hover:text-red-500 transition text-base">🗑️</button></div></div>`;
+        }).join('');
+        const zoneBox = document.createElement('div');
+        zoneBox.className = "bg-white rounded-2xl border border-slate-200 shadow-sm p-6 hover:shadow-md transition";
+        zoneBox.innerHTML = `<span class="block font-bold text-sm text-indigo-900 mb-4 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-lg inline-block shadow-sm">${translateDBItem(zoneName)}</span><div class="space-y-1 max-h-64 overflow-y-auto pr-2 mt-2">${itemsHtml || `<p class="text-sm text-slate-400 font-medium">${dict.no_data}</p>`}</div>`;
+        checklistListContainer.appendChild(zoneBox);
+      });
+      applyLanguage();
+    }
+
+    function openEditModal(username, currentRole) {
+      document.getElementById('editModalUsername').innerText = username;
+      document.getElementById('editModalUserValue').value = username;
+      document.getElementById('editModalPass').value = ''; document.getElementById('editModalRole').value = currentRole; document.getElementById('editUserModal').classList.remove('hidden');
+    }
+    function closeEditModal() { document.getElementById('editUserModal').classList.add('hidden'); }
+    function saveEditUser() {
+      const u = document.getElementById('editModalUserValue').value; const newP = document.getElementById('editModalPass').value.trim();
+      const newRole = document.getElementById('editModalRole').value;
+      showToast('toast_saving_bg', 'info'); 
+      closeEditModal();
+      
+      const userIdx = globalData.users.findIndex(user => user.username === u);
+      if(userIdx > -1) globalData.users[userIdx].role = newRole;
+      renderAdminDashboard();
+
+      if(newP) {
+        const userObj = globalData.users.find(x => x.username === u);
+        if(userObj) userObj.password = newP;
       }
-
-      closeEditTextModal();
-      showToast('toast_edit_succ', 'success');
-      renderFormElements();
+      db.ref('appData').set(globalData);
+      showToast('toast_edit_user_succ', 'success');
       renderAdminDashboard();
     }
 
-    function openEditUserModal(username, role) {
-      currentEditUserData = { username, role };
-      document.getElementById('editModalUsername').innerText = username;
-      document.getElementById('editModalUserValue').value = username;
-      document.getElementById('editModalPass').value = '';
-      document.getElementById('editModalRole').value = role;
-      document.getElementById('editUserModal').classList.remove('hidden');
+    function addShopSpecific(zone, inputId) { 
+        const value = document.getElementById(inputId).value.trim();
+        if(!value) return showToast('toast_req_shop', 'error'); 
+        
+        document.getElementById(inputId).value = ''; 
+        globalData.shops.push({zone: zone, name: value}); renderFormElements(); renderDashboard(); renderAdminDashboard();
+        showToast('toast_saving_bg', 'info');
+        google.script.run.withSuccessHandler((data) => { 
+            db.ref('appData').set(globalData);
+        showToast('toast_add_shop_succ', 'success');
+        renderFormElements(); renderDashboard(); renderAdminDashboard();
     }
+    function addConfig(type) {
+      if (type === 'checklist') { 
+          const zone = document.getElementById('configChecklistZone').value;
+          const value = document.getElementById('configChecklistItem').value.trim(); 
+          if(!value) return showToast('toast_req_check', 'error'); 
+          
+          document.getElementById('configChecklistItem').value = '';
+          globalData.checklist.push({zone: zone, item: value}); renderFormElements(); renderDashboard(); renderAdminDashboard();
+          showToast('toast_saving_bg', 'info');
+          db.ref('appData').set(globalData);
+          showToast('toast_add_check_succ', 'success');
+          renderFormElements(); renderDashboard(); renderAdminDashboard();
+      } 
+      else if (type === 'inspectorRole') { 
+          const value = document.getElementById('newInspectorRole').value.trim();
+          if(!value) return showToast('toast_req_role', 'error'); 
 
-    function closeEditModal() {
-      document.getElementById('editUserModal').classList.add('hidden');
-      currentEditUserData = null;
-    }
-
-    function saveEditUser() {
-      if (!currentEditUserData) return;
-      const username = currentEditUserData.username;
-      const newPass = document.getElementById('editModalPass').value.trim();
-      const newRole = document.getElementById('editModalRole').value;
-
-      const user = (globalData.users || []).find(u => u.username === username);
-      if (user) {
-        if (newPass) user.password = newPass;
-        user.role = newRole;
-        db.ref('appData/users').set(globalData.users).then(() => {
-          showToast('toast_edit_user_succ', 'success');
-          closeEditModal();
-          renderAdminDashboard();
-        });
+          document.getElementById('newInspectorRole').value = '';
+          globalData.inspectorRoles.push(value); renderFormElements(); renderDashboard(); renderAdminDashboard();
+          showToast('toast_saving_bg', 'info');
+          db.ref('appData').set(globalData);
+          showToast('toast_add_role_succ', 'success');
+          renderFormElements(); renderDashboard(); renderAdminDashboard();
       }
     }
+    function renderViewableRoleCheckboxes(containerId, checkedRoles = []) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  if (!globalData.inspectorRoles || globalData.inspectorRoles.length === 0) return;
 
-    function addNewUser() {
-      const u = document.getElementById('newAdminUser').value.trim();
-      const p = document.getElementById('newAdminPass').value.trim();
-      const r = document.getElementById('newAdminRole').value;
+  globalData.inspectorRoles.forEach(role => {
+    const isChecked = checkedRoles.includes(role) ? 'checked' : '';
+    container.innerHTML += `
+      <label class="flex items-center space-x-2 cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-indigo-50">
+        <input type="checkbox" value="${role}" class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 viewable-role-chk-${containerId}" ${isChecked}>
+        <span class="text-xs font-semibold text-slate-700">${role}</span>
+      </label>
+    `;
+  });
+}
 
-      if (!u || !p) return showToast('toast_req_userpass', 'error');
+function toggleRoleCheckboxes(mode) {
+  const role = document.getElementById(mode === 'new' ? 'newAdminRole' : 'editModalRole').value;
+  const container = document.getElementById(mode === 'new' ? 'newViewableRolesContainer' : 'editViewableRolesContainer');
+  if (role === 'admin') {
+    container.classList.add('hidden');
+  } else {
+    container.classList.remove('hidden');
+    renderViewableRoleCheckboxes(mode === 'new' ? 'newViewableRolesContainer' : 'editCheckboxes');
+  }
+}
 
-      if (!globalData.users) globalData.users = [];
-      if (globalData.users.some(x => x.username === u)) {
-        return showToast('Username นี้มีอยู่ในระบบแล้ว', 'error');
-      }
-
-      globalData.users.push({ username: u, password: p, role: r });
-      db.ref('appData/users').set(globalData.users).then(() => {
+function getCheckedRoles(containerId) {
+  const checkboxes = document.querySelectorAll(`.viewable-role-chk-${containerId}:checked`);
+  return Array.from(checkboxes).map(chk => chk.value);
+}
+    
+    function addNewUser() { 
+        const u = document.getElementById('newAdminUser').value.trim();
+        const p = document.getElementById('newAdminPass').value.trim(); const role = document.getElementById('newAdminRole').value; 
+        if(!u || !p) return showToast('toast_req_userpass', 'error'); 
+        
         document.getElementById('newAdminUser').value = '';
-        document.getElementById('newAdminPass').value = '';
+        document.getElementById('newAdminPass').value = ''; 
+        globalData.users.push({username: u, role: role}); renderAdminDashboard();
+        showToast('toast_saving_bg', 'info');
+        if (!globalData.users) globalData.users = [];
+        globalData.users.push({ username: u, password: p, role: role });
+        db.ref('appData').set(globalData);
         showToast('toast_add_user_succ', 'success');
         renderAdminDashboard();
-      });
     }
-
-    function addShopSpecific(zone, inputId) {
-      const input = document.getElementById(inputId);
-      const val = input.value.trim();
-      if (!val) return showToast('toast_req_shop', 'error');
-
-      if (!globalData.shops) globalData.shops = [];
-      globalData.shops.push({ zone: zone, name: val });
-
-      db.ref('appData/shops').set(globalData.shops).then(() => {
-        input.value = '';
-        showToast('toast_add_shop_succ', 'success');
-        renderFormElements();
-        renderAdminDashboard();
-      });
-    }
-
-    function addConfig(type) {
-      if (type === 'inspectorRole') {
-        const input = document.getElementById('newInspectorRole');
-        const val = input.value.trim();
-        if (!val) return showToast('toast_req_role', 'error');
-
-        if (!globalData.inspectorRoles) globalData.inspectorRoles = [];
-        globalData.inspectorRoles.push(val);
-
-        db.ref('appData/inspectorRoles').set(globalData.inspectorRoles).then(() => {
-          input.value = '';
-          showToast('toast_add_role_succ', 'success');
-          renderFormElements();
-          renderAdminDashboard();
-        });
-      } else if (type === 'checklist') {
-        const zone = document.getElementById('configChecklistZone').value;
-        const input = document.getElementById('configChecklistItem');
-        const val = input.value.trim();
-        if (!val) return showToast('toast_req_check', 'error');
-
-        if (!globalData.checklist) globalData.checklist = [];
-        globalData.checklist.push({ zone: zone, item: val });
-
-        db.ref('appData/checklist').set(globalData.checklist).then(() => {
-          input.value = '';
-          showToast('toast_add_check_succ', 'success');
-          renderFormElements();
-          renderAdminDashboard();
-        });
-      }
-    }
-
-    function confirmDelete(type, zone, val) {
-      currentDeleteData = { type, zone, val };
-      document.getElementById('confirmDeleteModal').classList.remove('hidden');
+    
+    let deleteTarget = { type: null, zone: null, value: null };
+    function deleteConfig(type, zone, value) { 
+        deleteTarget = { type, zone, value };
+        document.getElementById('confirmDeleteModal').classList.remove('hidden');
     }
 
     function closeDeleteModal() {
-      document.getElementById('confirmDeleteModal').classList.add('hidden');
-      currentDeleteData = null;
+        document.getElementById('confirmDeleteModal').classList.add('hidden');
+        deleteTarget = { type: null, zone: null, value: null };
     }
 
     function executeDelete() {
-      if (!currentDeleteData) return;
-      const { type, zone, val } = currentDeleteData;
-      showToast('toast_del_bg', 'info');
+  const { type, zone, value } = deleteTarget;
+  closeDeleteModal(); 
 
-      if (type === 'inspectorRole') {
-        globalData.inspectorRoles = (globalData.inspectorRoles || []).filter(r => r !== val);
-        db.ref('appData/inspectorRoles').set(globalData.inspectorRoles);
-      } else if (type === 'user') {
-        globalData.users = (globalData.users || []).filter(u => u.username !== val);
-        db.ref('appData/users').set(globalData.users);
-      } else if (type === 'shop') {
-        globalData.shops = (globalData.shops || []).filter(s => !(s.zone === zone && s.name === val));
-        db.ref('appData/shops').set(globalData.shops);
-      } else if (type === 'checklist') {
-        globalData.checklist = (globalData.checklist || []).filter(c => !(c.zone === zone && c.item === val));
-        db.ref('appData/checklist').set(globalData.checklist);
-      }
+  if (type === 'inspectorRole') globalData.inspectorRoles = globalData.inspectorRoles.filter(r => r !== value);
+  else if (type === 'shop') globalData.shops = globalData.shops.filter(s => !(s.zone === zone && s.name === value));
+  else if (type === 'checklist') globalData.checklist = globalData.checklist.filter(c => !(c.zone === zone && c.item === value));
+  else if (type === 'user') globalData.users = globalData.users.filter(u => u.username !== zone); 
+  
+  renderFormElements(); renderDashboard(); renderAdminDashboard();
+  
+  // เซฟลง Firebase
+  db.ref('appData').set(globalData);
+  showToast('toast_del_succ', 'success');
+}
 
-      closeDeleteModal();
-      showToast('toast_del_succ', 'success');
-      renderFormElements();
-      renderAdminDashboard();
-    }
+    function onConfigUpdated(data) { globalData = data; renderFormElements(); renderDashboard(); renderAdminDashboard(); showLoading(false); }
   </script>
+  <div id="successModal" class="hidden fixed inset-0 bg-slate-900/60 z-[99999] flex justify-center items-center backdrop-blur-sm">
+  <div class="bg-white p-8 rounded-3xl w-full max-w-sm text-center">
+    <div class="w-20 h-20 bg-emerald-100 text-emerald-500 rounded-full flex justify-center items-center mx-auto mb-4">
+      <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+    </div>
+    <h3 class="text-2xl font-bold mb-2">บันทึกข้อมูลสำเร็จ!</h3>
+    <div class="bg-slate-50 rounded-xl p-4 text-left text-sm mb-6">
+      <p>ร้านค้า: <span id="modalShopName" class="font-bold text-indigo-600"></span></p>
+      <p>ผู้ตรวจสอบ: <span id="modalAuditor" class="font-bold"></span></p>
+    </div>
+    <button onclick="closeSuccessModal()" class="w-full bg-emerald-500 text-white rounded-xl py-3 font-bold">ตรวจรายการต่อไป</button>
+  </div>
+</div>
 </body>
 </html>
